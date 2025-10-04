@@ -64,6 +64,13 @@
             }
         }
 
+        /* Pour ordinateur, on désactive l'animation de pulsation */
+        @media (min-width: 1024px) {
+            .custom-hotspot {
+                animation: none;
+            }
+        }
+
         /* Navigation Overlay */
         .nav-overlay {
             position: fixed;
@@ -122,26 +129,30 @@
             padding: 20px;
             max-width: 300px;
         }
-
-        .room-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
+        
+        /* Style pour le menu déroulant des salles */
+        #roomSelect {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
+            -webkit-appearance: none; /* Supprime le style par défaut */
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
         }
 
-        .room-card:hover {
-            background: rgba(212, 175, 55, 0.2);
-            border-color: rgba(212, 175, 55, 0.5);
-            transform: translateX(-5px);
-        }
-
-        .room-card.active {
-            background: rgba(212, 175, 55, 0.3);
-            border-color: rgba(212, 175, 55, 0.8);
+        /* Style pour les options du menu déroulant */
+        #roomSelect option {
+            background: #f4e5a1; /* Fond clair pour les options */
+            color: #0a0a0a; /* Texte noir pour une bonne lisibilité */
         }
 
         /* Minimap */
@@ -256,11 +267,8 @@
                 padding: 12px 20px;
             }
 
-            /* Ajout pour rendre la liste des salles déroulante sur mobile */
-            #roomList {
-                max-height: 8vh; /* Limite la hauteur à 15% de la hauteur de l'écran */
-                overflow-y: auto; /* Ajoute une barre de défilement si nécessaire */
-            }
+            /* Sur mobile, le sélecteur de salle prend toute la largeur */
+            .room-selector { width: calc(100% - 40px); }
         }
     </style>
 </head>
@@ -319,9 +327,7 @@
     <!-- Room Selector -->
     <div class="room-selector">
         <h3 class="text-white text-lg font-light mb-4">Salles du Musée</h3>
-        <div id="roomList">
-            <!-- Rooms will be inserted here by JavaScript -->
-        </div>
+        <!-- Le menu déroulant sera inséré ici par JavaScript -->
     </div>
 
     <!-- Control Panel -->
@@ -560,31 +566,35 @@
                         pitch: hs.pitch,
                         yaw: hs.yaw,
                         cssClass: 'custom-hotspot',
-                        createTooltipFunc: hotspot => {
-                            const div = document.createElement('div');
-                            div.className = 'tooltip';
-                            div.textContent = hs.text;
-                            return div;
+                        text: hs.text, // Ajout du texte pour le tooltip par défaut
+                        // On utilise createTooltipFunc pour attacher des événements personnalisés
+                        createTooltipFunc: (hotSpotDiv, args) => {
+                            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+                            if (isTouchDevice) {
+                                // Comportement pour mobile : clic
+                                hotSpotDiv.addEventListener('click', () => {
+                                    showArtworkInfo(args);
+                                    triggerHapticFeedback();
+                                });
+                            } else {
+                                // Comportement pour ordinateur : survol
+                                hotSpotDiv.addEventListener('mouseover', () => {
+                                    showArtworkInfo(args);
+                                });
+                            }
                         },
-                        clickHandlerFunc: () => showArtworkInfo(hs)
+                        createTooltipArgs: hs
                     };
                 } else {
+                    // Pour les points de navigation, on laisse Pannellum gérer le clic nativement.
                     return {
                         pitch: hs.pitch,
                         yaw: hs.yaw,
+                        type: 'scene',
+                        sceneId: hs.targetScene,
                         cssClass: 'custom-hotspot',
-                        createTooltipFunc: hotspot => {
-                            const div = document.createElement('div');
-                            div.className = 'tooltip';
-                            div.textContent = hs.text;
-                            return div;
-                        },
-                        clickHandlerFunc: () => {
-                            const targetRoom = museumConfig.rooms.find(r => r.id === hs.targetScene);
-                            if (targetRoom) {
-                                loadScene(targetRoom);
-                            }
-                        }
+                        text: hs.text
                     };
                 }
             });
@@ -599,7 +609,7 @@
                 panorama: room.image,
                 autoLoad: true,
                 showControls: false,
-                mouseZoom: true,
+                mouseZoom: false, // Désactivé pour éviter que les points "fuient" au scroll
                 autoRotate: autoRotateEnabled ? -2 : 0,
                 compass: false,
                 hotSpots: hotSpots,
@@ -660,12 +670,19 @@
         // Populate room list
         function populateRoomList() {
             const roomList = document.getElementById('roomList');
-            roomList.innerHTML = museumConfig.rooms.map(room => `
-                <div class="room-card ${room.id === currentRoomId ? 'active' : ''}" onclick="navigateToRoom('${room.id}')">
-                    <h4 class="text-white text-sm font-medium mb-1">${room.name}</h4>
-                    <p class="text-gray-400 text-xs">${room.description}</p>
-                </div>
-            `).join('');
+            const roomSelectorContainer = document.querySelector('.room-selector');
+            
+            const selectHTML = `
+                <select id="roomSelect" onchange="navigateToRoom(this.value)">
+                    ${museumConfig.rooms.map(room => `
+                        <option value="${room.id}" ${room.id === currentRoomId ? 'selected' : ''}>
+                            ${room.name}
+                        </option>
+                    `).join('')}
+                </select>
+            `;
+            // On s'assure de ne pas dupliquer le h3
+            roomSelectorContainer.innerHTML = `<h3 class="text-white text-lg font-light mb-4">Salles du Musée</h3>` + selectHTML;
         }
 
         // Update room list active state
@@ -819,24 +836,29 @@
             touchStartY = e.touches[0].clientY;
         });
 
-        document.addEventListener('touchend', (e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            
-            const diffX = touchEndX - touchStartX;
-            const diffY = touchEndY - touchStartY;
-            
-            // Swipe detection (optional for room navigation)
-            if (Math.abs(diffX) > 100 && Math.abs(diffY) < 50) {
-                if (diffX > 0) {
-                    // Swipe right - previous room
-                    navigateToPreviousRoom();
-                } else {
-                    // Swipe left - next room
-                    navigateToNextRoom();
-                }
-            }
-        });
+        /*
+         * La fonctionnalité de navigation par balayage (swipe) a été désactivée
+         * pour permettre de regarder librement autour de soi sur mobile sans changer de salle accidentellement.
+         * Le code est commenté ci-dessous au cas où vous voudriez le réactiver.
+        */
+        // document.addEventListener('touchend', (e) => {
+        //     const touchEndX = e.changedTouches[0].clientX;
+        //     const touchEndY = e.changedTouches[0].clientY;
+        //     
+        //     const diffX = touchEndX - touchStartX;
+        //     const diffY = touchEndY - touchStartY;
+        //     
+        //     // Swipe detection (optional for room navigation)
+        //     if (Math.abs(diffX) > 100 && Math.abs(diffY) < 50) {
+        //         if (diffX > 0) {
+        //             // Swipe right - previous room
+        //             navigateToPreviousRoom();
+        //         } else {
+        //             // Swipe left - next room
+        //             navigateToNextRoom();
+        //         }
+        //     }
+        // });
 
         // Navigate to previous room
         function navigateToPreviousRoom() {
