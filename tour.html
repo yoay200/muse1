@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visite Virtuelle 360° - MCN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #0a0a0a;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        #panorama {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Custom Hotspot Styles */
+        .custom-hotspot {
+            width: 40px;
+            height: 40px;
+            background: rgba(212, 175, 55, 0.9);
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-hotspot:hover {
+            transform: scale(1.3);
+            background: rgba(212, 175, 55, 1);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
+        }
+
+        .custom-hotspot::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 15px rgba(212, 175, 55, 0);
+            }
+        }
+
+        /* Navigation Overlay */
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 15px 30px;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            position: fixed;
+            top: 100px;
+            left: 30px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 350px;
+            transform: translateX(-400px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .info-panel.active {
+            transform: translateX(0);
+        }
+
+        /* Room Selector */
+        .room-selector {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 300px;
+        }
+
+        .room-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .room-card:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.5);
+            transform: translateX(-5px);
+        }
+
+        .room-card.active {
+            background: rgba(212, 175, 55, 0.3);
+            border-color: rgba(212, 175, 55, 0.8);
+        }
+
+        /* Minimap */
+        .minimap {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            width: 200px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 10000;
+            white-space: nowrap;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Button Styles */
+        .btn-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-control:hover {
+            background: rgba(212, 175, 55, 0.3);
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+
+        .btn-control.active {
+            background: rgba(212, 175, 55, 0.5);
+            border-color: rgba(212, 175, 55, 0.8);
+        }
+
+        /* Gold text */
+        .gold-text {
+            background: linear-gradient(135deg, #d4af37 0%, #f4e5a1 50%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .info-panel, .room-selector {
+                max-width: calc(100vw - 40px);
+                left: 20px;
+                right: 20px;
+            }
+            
+            .room-selector {
+                top: auto;
+                bottom: 120px;
+            }
+
+            .minimap {
+                display: none;
+            }
+
+            .control-panel {
+                bottom: 20px;
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="text-center">
+            <div class="loader mx-auto mb-4"></div>
+            <p class="text-white text-lg">Chargement de la visite virtuelle...</p>
+        </div>
+    </div>
+
+    <!-- Navigation Overlay -->
+    <nav class="nav-overlay">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-600 to-yellow-800 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-white text-xl font-light">Visite Virtuelle 360°</span>
+                        <p class="text-gray-400 text-xs">Musée des Civilisations Noires</p>
+                    </div>
+                </div>
+                
+                <a href="index.html" class="text-white hover:text-yellow-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Panorama Viewer -->
+    <div id="panorama"></div>
+
+    <!-- Info Panel -->
+    <div id="infoPanel" class="info-panel">
+        <div class="flex justify-between items-start mb-4">
+            <h3 class="text-xl font-light text-white">Informations</h3>
+            <button onclick="closeInfoPanel()" class="text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="infoPanelContent">
+            <p class="text-gray-400 text-sm">Cliquez sur un point d'intérêt pour voir les détails</p>
+        </div>
+    </div>
+
+    <!-- Room Selector -->
+    <div class="room-selector">
+        <h3 class="text-white text-lg font-light mb-4">Salles du Musée</h3>
+        <div id="roomList">
+            <!-- Rooms will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <div class="flex items-center space-x-4">
+            <button onclick="toggleAutoRotate()" id="autoRotateBtn" class="btn-control">
+                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+            
+            <button onclick="toggleFullscreen()" class="btn-control">
+                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                </svg>
+            </button>
+
+            <button onclick="toggleSound()" id="soundBtn" class="btn-control">
+                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                </svg>
+            </button>
+
+            <button onclick="showHelp()" class="btn-control">
+                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Minimap -->
+    <div class="minimap">
+        <h4 class="text-white text-xs font-semibold mb-2 uppercase tracking-wider">Plan du Musée</h4>
+        <div class="relative h-full">
+            <svg viewBox="0 0 200 100" class="w-full h-full">
+                <!-- Simplified museum floor plan -->
+                <rect x="10" y="10" width="80" height="40" fill="rgba(212, 175, 55, 0.2)" stroke="rgba(212, 175, 55, 0.5)" stroke-width="2" id="room1Map"/>
+                <rect x="110" y="10" width="80" height="40" fill="rgba(212, 175, 55, 0.2)" stroke="rgba(212, 175, 55, 0.5)" stroke-width="2" id="room2Map"/>
+                <rect x="10" y="60" width="80" height="30" fill="rgba(212, 175, 55, 0.2)" stroke="rgba(212, 175, 55, 0.5)" stroke-width="2" id="room3Map"/>
+                <rect x="110" y="60" width="80" height="30" fill="rgba(212, 175, 55, 0.2)" stroke="rgba(212, 175, 55, 0.5)" stroke-width="2" id="room4Map"/>
+                
+                <!-- Current position indicator -->
+                <circle id="currentPosition" cx="50" cy="30" r="5" fill="#d4af37" opacity="0.8">
+                    <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+                </circle>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        // Museum Configuration
+        const museumConfig = {
+            rooms: [
+                {
+                    id: 'hall',
+                    name: 'Hall d\'Entrée',
+                    description: 'Le majestueux hall d\'entrée vous accueille',
+                    image: 'https://pannellum.org/images/alma.jpg',
+                    hotSpots: [
+                        {
+                            pitch: 0,
+                            yaw: 0,
+                            type: 'info',
+                            text: 'Masque Cérémoniel Sénégalais',
+                            title: 'Masque Rituel',
+                            description: 'Ce masque du XIXe siècle était utilisé lors des cérémonies d\'initiation. Il représente l\'esprit ancestral qui guide les jeunes vers l\'âge adulte.',
+                            origin: 'Sénégal, Région de Casamance',
+                            period: 'XIXe siècle',
+                            materials: 'Bois, pigments naturels, fibres végétales'
+                        },
+                        {
+                            pitch: -10,
+                            yaw: 90,
+                            type: 'scene',
+                            text: 'Aller à la Galerie des Masques',
+                            targetScene: 'masks'
+                        },
+                        {
+                            pitch: -10,
+                            yaw: -90,
+                            type: 'scene',
+                            text: 'Aller à la Galerie des Sculptures',
+                            targetScene: 'sculptures'
+                        }
+                    ]
+                },
+                {
+                    id: 'masks',
+                    name: 'Galerie des Masques',
+                    description: 'Collection exceptionnelle de masques rituels',
+                    image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=4096',
+                    hotSpots: [
+                        {
+                            pitch: 5,
+                            yaw: -30,
+                            type: 'info',
+                            text: 'Masque Dogon',
+                            title: 'Masque Dogon du Mali',
+                            description: 'Les Dogons du Mali utilisaient ces masques lors de la danse rituelle Dama, une cérémonie funéraire qui accompagne les défunts vers l\'au-delà.',
+                            origin: 'Mali, Falaise de Bandiagara',
+                            period: 'XVIIIe siècle',
+                            materials: 'Bois de fromager, coquillages, fibres'
+                        },
+                        {
+                            pitch: 5,
+                            yaw: 30,
+                            type: 'info',
+                            text: 'Masque Baoulé',
+                            title: 'Masque Baoulé de Côte d\'Ivoire',
+                            description: 'Ce masque féminin représente un idéal de beauté baoulé. Il était porté lors des danses Goli et Mblo.',
+                            origin: 'Côte d\'Ivoire, Région Baoulé',
+                            period: 'XIXe siècle',
+                            materials: 'Bois, kaolin, pigments'
+                        },
+                        {
+                            pitch: -10,
+                            yaw: 180,
+                            type: 'scene',
+                            text: 'Retour au Hall',
+                            targetScene: 'hall'
+                        },
+                        {
+                            pitch: -10,
+                            yaw: 90,
+                            type: 'scene',
+                            text: 'Galerie des Textiles',
+                            targetScene: 'textiles'
+                        }
+                    ]
+                },
+                {
+                    id: 'sculptures',
+                    name: 'Galerie des Sculptures',
+                    description: 'Sculptures ancestrales et contemporaines',
+                    image: 'https://pannellum.org/images/jfk.jpg',
+                    hotSpots: [
+                        {
+                            pitch: 0,
+                            yaw: 0,
+                            type: 'info',
+                            text: 'Statue d\'Ancêtre Yoruba',
+                            title: 'Statue Yoruba du Nigeria',
+                            description: 'Cette statue représente un ancêtre royal Yoruba. Elle servait d\'intermédiaire entre le monde des vivants et celui des esprits.',
+                            origin: 'Nigeria, Royaume d\'Ifé',
+                            period: 'XVIe siècle',
+                            materials: 'Bronze à la cire perdue'
+                        },
+                        {
+                            pitch: 10,
+                            yaw: -60,
+                            type: 'info',
+                            text: 'Sculpture Akan',
+                            title: 'Poids à Or Akan',
+                            description: 'Les Akan du Ghana utilisaient ces petites sculptures de bronze pour peser la poudre d\'or servant de monnaie.',
+                            origin: 'Ghana, Région Ashanti',
+                            period: 'XVIIe siècle',
+                            materials: 'Laiton'
+                        },
+                        {
+                            pitch: -10,
+                            yaw: 180,
+                            type: 'scene',
+                            text: 'Retour au Hall',
+                            targetScene: 'hall'
+                        }
+                    ]
+                },
+                {
+                    id: 'textiles',
+                    name: 'Galerie des Textiles',
+                    description: 'Tissus traditionnels et techniques ancestrales',
+                    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=4096',
+                    hotSpots: [
+                        {
+                            pitch: 0,
+                            yaw: 0,
+                            type: 'info',
+                            text: 'Kente du Ghana',
+                            title: 'Tissu Kente Royal',
+                            description: 'Le Kente est un tissu royal tissé à la main par les Ashanti et les Ewe. Chaque motif et couleur a une signification symbolique.',
+                            origin: 'Ghana, Région Ashanti',
+                            period: 'XXe siècle',
+                            materials: 'Coton, soie'
+                        },
+                        {
+                            pitch: 5,
+                            yaw: -90,
+                            type: 'info',
+                            text: 'Bogolan du Mali',
+                            title: 'Bogolan Traditionnel',
+                            description: 'Le Bogolan est un tissu malien teint avec de la boue fermentée. Il était traditionnellement porté par les chasseurs.',
+                            origin: 'Mali, Région Bamana',
+                            period: 'XIXe siècle',
+                            materials: 'Coton, boue, végétaux'
+                        },
+                        {
+                            pitch: -10,
+                            yaw: 180,
+                            type: 'scene',
+                            text: 'Galerie des Masques',
+                            targetScene: 'masks'
+                        }
+                    ]
+                }
+            ]
+        };
+
+        let viewer;
+        let currentRoomId = 'hall';
+        let autoRotateEnabled = false;
+        let soundEnabled = false;
+
+        // Initialize the virtual tour
+        function initTour() {
+            const startRoom = museumConfig.rooms[0];
+            loadScene(startRoom);
+            populateRoomList();
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 1500);
+        }
+
+        // Load a scene
+        function loadScene(room) {
+            currentRoomId = room.id;
+            updateMinimap();
+            updateRoomList();
+
+            // Create hotspots configuration
+            const hotSpots = room.hotSpots.map(hs => {
+                if (hs.type === 'info') {
+                    return {
+                        pitch: hs.pitch,
+                        yaw: hs.yaw,
+                        cssClass: 'custom-hotspot',
+                        createTooltipFunc: hotspot => {
+                            const div = document.createElement('div');
+                            div.className = 'tooltip';
+                            div.textContent = hs.text;
+                            return div;
+                        },
+                        clickHandlerFunc: () => showArtworkInfo(hs)
+                    };
+                } else {
+                    return {
+                        pitch: hs.pitch,
+                        yaw: hs.yaw,
+                        cssClass: 'custom-hotspot',
+                        createTooltipFunc: hotspot => {
+                            const div = document.createElement('div');
+                            div.className = 'tooltip';
+                            div.textContent = hs.text;
+                            return div;
+                        },
+                        clickHandlerFunc: () => {
+                            const targetRoom = museumConfig.rooms.find(r => r.id === hs.targetScene);
+                            if (targetRoom) {
+                                loadScene(targetRoom);
+                            }
+                        }
+                    };
+                }
+            });
+
+            // Initialize or update viewer
+            if (viewer) {
+                viewer.destroy();
+            }
+
+            viewer = pannellum.viewer('panorama', {
+                type: 'equirectangular',
+                panorama: room.image,
+                autoLoad: true,
+                showControls: false,
+                mouseZoom: true,
+                autoRotate: autoRotateEnabled ? -2 : 0,
+                compass: false,
+                hotSpots: hotSpots,
+                hfov: 100,
+                pitch: 0,
+                yaw: 0
+            });
+        }
+
+        // Show artwork information
+        function showArtworkInfo(artwork) {
+            const panel = document.getElementById('infoPanel');
+            const content = document.getElementById('infoPanelContent');
+            
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-2xl font-light text-white mb-2">${artwork.title}</h4>
+                        <p class="text-yellow-600 text-sm font-medium">${artwork.origin}</p>
+                    </div>
+                    
+                    <p class="text-gray-300 leading-relaxed">${artwork.description}</p>
+                    
+                    <div class="space-y-2 pt-4 border-t border-gray-700">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 text-sm">Période</span>
+                            <span class="text-white text-sm font-medium">${artwork.period}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 text-sm">Matériaux</span>
+                            <span class="text-white text-sm font-medium">${artwork.materials}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 pt-4">
+                        <button onclick="playAudioGuide()" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black py-2 px-4 rounded-lg transition flex items-center justify-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                            </svg>
+                            <span class="text-sm font-semibold">Écouter</span>
+                        </button>
+                        
+                        <button onclick="viewDetails()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg transition text-sm font-semibold">
+                            Plus de détails
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            panel.classList.add('active');
+        }
+
+        // Close info panel
+        function closeInfoPanel() {
+            document.getElementById('infoPanel').classList.remove('active');
+        }
+
+        // Populate room list
+        function populateRoomList() {
+            const roomList = document.getElementById('roomList');
+            roomList.innerHTML = museumConfig.rooms.map(room => `
+                <div class="room-card ${room.id === currentRoomId ? 'active' : ''}" onclick="navigateToRoom('${room.id}')">
+                    <h4 class="text-white text-sm font-medium mb-1">${room.name}</h4>
+                    <p class="text-gray-400 text-xs">${room.description}</p>
+                </div>
+            `).join('');
+        }
+
+        // Update room list active state
+        function updateRoomList() {
+            populateRoomList();
+        }
+
+        // Navigate to room
+        function navigateToRoom(roomId) {
+            const room = museumConfig.rooms.find(r => r.id === roomId);
+            if (room) {
+                loadScene(room);
+            }
+        }
+
+        // Update minimap
+        function updateMinimap() {
+            // Reset all rooms
+            ['room1Map', 'room2Map', 'room3Map', 'room4Map'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.setAttribute('fill', 'rgba(212, 175, 55, 0.2)');
+                }
+            });
+
+            // Highlight current room
+            const roomIndex = museumConfig.rooms.findIndex(r => r.id === currentRoomId);
+            const mapId = `room${roomIndex + 1}Map`;
+            const mapEl = document.getElementById(mapId);
+            if (mapEl) {
+                mapEl.setAttribute('fill', 'rgba(212, 175, 55, 0.5)');
+            }
+
+            // Update position indicator
+            const positions = [
+                { cx: 50, cy: 30 },
+                { cx: 150, cy: 30 },
+                { cx: 50, cy: 75 },
+                { cx: 150, cy: 75 }
+            ];
+            const position = positions[roomIndex] || positions[0];
+            const positionEl = document.getElementById('currentPosition');
+            if (positionEl) {
+                positionEl.setAttribute('cx', position.cx);
+                positionEl.setAttribute('cy', position.cy);
+            }
+        }
+
+        // Toggle auto-rotate
+        function toggleAutoRotate() {
+            autoRotateEnabled = !autoRotateEnabled;
+            const btn = document.getElementById('autoRotateBtn');
+            
+            if (autoRotateEnabled) {
+                viewer.setAutoRotate(-2);
+                btn.classList.add('active');
+            } else {
+                viewer.setAutoRotate(0);
+                btn.classList.remove('active');
+            }
+        }
+
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Toggle sound
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('soundBtn');
+            
+            if (soundEnabled) {
+                btn.classList.add('active');
+                // Play ambient sound
+                playAmbientSound();
+            } else {
+                btn.classList.remove('active');
+                // Stop ambient sound
+                stopAmbientSound();
+            }
+        }
+
+        // Play audio guide
+        function playAudioGuide() {
+            alert('🎧 Fonction audio guide\n\nDans la version finale, un narrateur professionnel vous racontera l\'histoire de cette œuvre en Français, Anglais ou Wolof.\n\nLa narration sera synchronisée avec des animations et des zooms sur les détails importants.');
+        }
+
+        // View details
+        function viewDetails() {
+            alert('📱 Fonction détails complets\n\nCette fonction ouvrira une page dédiée avec :\n• Images HD de l\'œuvre\n• Vidéo documentaire\n• Contexte historique approfondi\n• Œuvres similaires\n• Option de partage sur réseaux sociaux');
+        }
+
+        // Play ambient sound
+        function playAmbientSound() {
+            console.log('Playing ambient museum sounds...');
+            // Dans la version finale, jouer des sons d'ambiance de musée
+        }
+
+        // Stop ambient sound
+        function stopAmbientSound() {
+            console.log('Stopping ambient sounds...');
+        }
+
+        // Show help
+        function showHelp() {
+            alert('COMMENT NAVIGUER\n\n' +
+                  'Cliquez et glissez pour regarder autour\n' +
+                  'Molette de la souris pour zoomer\n' +
+                  'Cliquez sur les points dorés pour voir les œuvres\n' +
+                  'Cliquez sur les flèches pour changer de salle\n\n' +
+                  'CONTRÔLES\n' +
+                  'Rotation automatique\n' +
+                  '⛶ Plein écran\n' +
+                  'Son ambiant\n' +
+                  'Aide\n\n' +
+                  'ASTUCE : Utilisez le panneau de droite pour naviguer rapidement entre les salles !');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+                case 'r':
+                case 'R':
+                    toggleAutoRotate();
+                    break;
+                case 'h':
+                case 'H':
+                    showHelp();
+                    break;
+                case 'Escape':
+                    closeInfoPanel();
+                    break;
+            }
+        });
+
+        // Mobile touch handling
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+            
+            // Swipe detection (optional for room navigation)
+            if (Math.abs(diffX) > 100 && Math.abs(diffY) < 50) {
+                if (diffX > 0) {
+                    // Swipe right - previous room
+                    navigateToPreviousRoom();
+                } else {
+                    // Swipe left - next room
+                    navigateToNextRoom();
+                }
+            }
+        });
+
+        // Navigate to previous room
+        function navigateToPreviousRoom() {
+            const currentIndex = museumConfig.rooms.findIndex(r => r.id === currentRoomId);
+            const previousIndex = (currentIndex - 1 + museumConfig.rooms.length) % museumConfig.rooms.length;
+            loadScene(museumConfig.rooms[previousIndex]);
+        }
+
+        // Navigate to next room
+        function navigateToNextRoom() {
+            const currentIndex = museumConfig.rooms.findIndex(r => r.id === currentRoomId);
+            const nextIndex = (currentIndex + 1) % museumConfig.rooms.length;
+            loadScene(museumConfig.rooms[nextIndex]);
+        }
+
+        // Analytics (for demo purposes)
+        function trackInteraction(type, data) {
+            console.log('📊 Analytics:', type, data);
+            // Dans la version finale, envoyer à Google Analytics ou similaire
+        }
+
+        // Track artwork views
+        function trackArtworkView(artworkTitle) {
+            trackInteraction('artwork_view', { title: artworkTitle });
+        }
+
+        // Track room changes
+        function trackRoomChange(roomId) {
+            trackInteraction('room_change', { room: roomId });
+        }
+
+        // Performance monitoring
+        let loadStartTime = Date.now();
+        window.addEventListener('load', () => {
+            const loadTime = Date.now() - loadStartTime;
+            console.log(`⚡ Page loaded in ${loadTime}ms`);
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initTour();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (viewer) {
+                viewer.destroy();
+            }
+        });
+
+        // Responsive handling
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (viewer) {
+                    viewer.resize();
+                }
+            }, 250);
+        });
+
+        // Easter egg - Konami code
+        let konamiCode = [];
+        const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.key);
+            konamiCode = konamiCode.slice(-10);
+            
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                activateEasterEgg();
+            }
+        });
+
+        function activateEasterEgg() {
+            alert('🎉 EASTER EGG ACTIVÉ !\n\n' +
+                  'Vous avez découvert le mode secret du musée !\n' +
+                  'Félicitations pour votre curiosité ! 🏆\n\n' +
+                  'Cette fonctionnalité pourrait débloquer :\n' +
+                  '• Mode nuit avec éclairage spécial\n' +
+                  '• Visite guidée exclusive\n' +
+                  '• Contenu bonus caché\n' +
+                  '• Collection privée du conservateur');
+        }
+
+        // Progressive Web App prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install button (could be added to UI)
+            console.log('💾 PWA installation available');
+        });
+
+        // Service Worker registration (for offline mode)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Service worker would be registered here in production
+                console.log('🔧 Service Worker support detected');
+            });
+        }
+
+        // Check for WebXR support (for future AR/VR features)
+        if ('xr' in navigator) {
+            navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+                if (supported) {
+                    console.log('🥽 VR mode available!');
+                    // Could add VR button to controls
+                }
+            });
+        }
+
+        // Accessibility features
+        document.addEventListener('keydown', (e) => {
+            // Tab navigation for hotspots
+            if (e.key === 'Tab') {
+                const hotspots = document.querySelectorAll('.custom-hotspot');
+                if (hotspots.length > 0) {
+                    console.log('⌨️ Keyboard navigation active');
+                }
+            }
+        });
+
+        // Screen reader announcements
+        function announceForScreenReader(message) {
+            const announcement = document.createElement('div');
+            announcement.setAttribute('role', 'status');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.className = 'sr-only';
+            announcement.textContent = message;
+            document.body.appendChild(announcement);
+            
+            setTimeout(() => {
+                document.body.removeChild(announcement);
+            }, 1000);
+        }
+
+        // Announce room changes for accessibility
+        function announceRoomChange(roomName) {
+            announceForScreenReader(`Vous êtes maintenant dans ${roomName}`);
+        }
+
+        // Performance optimization - Lazy load images
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    console.log('🖼️ Loading image:', entry.target);
+                }
+            });
+        });
+
+        // Add visual effects on hotspot hover (for desktop)
+        document.addEventListener('mouseover', (e) => {
+            if (e.target.classList.contains('custom-hotspot')) {
+                e.target.style.transform = 'scale(1.3)';
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            if (e.target.classList.contains('custom-hotspot')) {
+                e.target.style.transform = 'scale(1)';
+            }
+        });
+
+        // Add haptic feedback for mobile
+        function triggerHapticFeedback() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(50);
+            }
+        }
+
+        // Connection quality detection
+        if ('connection' in navigator) {
+            const connection = navigator.connection;
+            console.log(`📡 Connection type: ${connection.effectiveType}`);
+            
+            if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+                console.log('⚠️ Slow connection detected - Consider loading lower quality images');
+            }
+        }
+
+        // Battery status (optional feature)
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then((battery) => {
+                console.log(`🔋 Battery level: ${battery.level * 100}%`);
+                
+                if (battery.level < 0.2) {
+                    console.log('⚠️ Low battery - Consider disabling auto-rotate');
+                }
+            });
+        }
+
+        console.log('✨ Visite Virtuelle 360° initialisée');
+        console.log('💡 Appuyez sur H pour voir l\'aide');
+        console.log('🎮 Raccourcis clavier : F (fullscreen), R (rotation), H (aide)');
+    </script>
+</body>
+</html>

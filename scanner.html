@@ -133,6 +133,31 @@
             50% { transform: translateY(calc(100% - 1.25rem)); }
             100% { transform: translateY(20px); }
         }
+        /* Voice Command Styles */
+        #voice-command-overlay {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(15px);
+            transition: opacity 0.3s ease-in-out;
+        }
+        #voice-command-btn.listening svg {
+            animation: pulse-mic 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-mic {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        .voice-feedback-wave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.2);
+            transform: translate(-50%, -50%) scale(0);
+            animation: wave 1.5s infinite ease-out;
+        }
+        @keyframes wave { to { transform: translate(-50%, -50%) scale(3); opacity: 0; } }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6">
@@ -168,6 +193,25 @@
                 Réessayer
             </button>
         </div>
+    </div>
+
+    <!-- Voice Command UI -->
+    <button id="voice-command-btn" class="fixed bottom-6 right-6 w-16 h-16 bg-yellow-600 rounded-full flex items-center justify-center shadow-lg z-50 hover:bg-yellow-700 transition-transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+    </button>
+
+    <div id="voice-command-overlay" class="hidden fixed inset-0 z-50 flex-col items-center justify-center p-4">
+        <div class="relative flex items-center justify-center w-40 h-40">
+            <div class="voice-feedback-wave"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+        </div>
+        <p id="voice-command-feedback" class="mt-8 text-2xl text-white font-light text-center"></p>
+        <p id="voice-command-transcript" class="mt-4 text-lg text-gray-400 font-light text-center h-8"></p>
+        <button id="close-voice-overlay" class="absolute top-6 right-6 text-white text-4xl font-light">&times;</button>
     </div>
 
     <!-- 3. Script d'initialisation du scanner -->
@@ -305,6 +349,93 @@
                     element.innerHTML = translations[lang][key];
                 }
             });
+
+            // --- Voice Command Logic ---
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn("La reconnaissance vocale n'est pas supportée par ce navigateur.");
+                document.getElementById('voice-command-btn').style.display = 'none';
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            const voiceBtn = document.getElementById('voice-command-btn');
+            const voiceOverlay = document.getElementById('voice-command-overlay');
+            const closeOverlayBtn = document.getElementById('close-voice-overlay');
+            const feedbackElVoice = document.getElementById('voice-command-feedback');
+            const transcriptEl = document.getElementById('voice-command-transcript');
+
+            const updateLang = () => {
+                const currentLang = localStorage.getItem('mcn-lang') || 'fr';
+                recognition.lang = currentLang === 'wo' ? 'fr-FR' : (currentLang + '-FR'); // Wolof n'est pas supporté, on utilise le français
+                feedbackElVoice.textContent = {
+                    fr: "Je vous écoute...",
+                    en: "I'm listening...",
+                    wo: "Ma ngi lay déglu..."
+                }[currentLang];
+            };
+
+            voiceBtn.addEventListener('click', () => {
+                updateLang();
+                voiceOverlay.classList.remove('hidden');
+                voiceOverlay.classList.add('flex');
+                voiceBtn.classList.add('listening');
+                transcriptEl.textContent = '';
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("Erreur au démarrage de la reconnaissance vocale:", e);
+                    stopListening();
+                }
+            });
+
+            const stopListening = () => {
+                voiceOverlay.classList.add('hidden');
+                voiceOverlay.classList.remove('flex');
+                voiceBtn.classList.remove('listening');
+                recognition.stop();
+            };
+
+            closeOverlayBtn.addEventListener('click', stopListening);
+
+            recognition.onresult = (event) => {
+                let transcript = Array.from(event.results)
+                    .map(result => result[0])
+                    .map(result => result.transcript)
+                    .join('');
+
+                transcriptEl.textContent = transcript;
+
+                if (event.results[0].isFinal) {
+                    handleVoiceCommand(transcript.toLowerCase().trim());
+                    stopListening();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Erreur de reconnaissance vocale:", event.error);
+                stopListening();
+            };
+
+            recognition.onend = () => {
+                stopListening();
+            };
+
+            function handleVoiceCommand(command) {
+                console.log("Commande vocale reçue:", command);
+                const lang = localStorage.getItem('mcn-lang') || 'fr';
+ 
+                const pageKeywords = {
+                    fr: { 'accueil': 'index.html', 'galerie': 'gallery.html', 'scanner': 'scanner.html', 'expérience': 'index.html#experience', 'à propos': 'index.html#about' },
+                    en: { 'home': 'index.html', 'gallery': 'gallery.html', 'scanner': 'scanner.html', 'experience': 'index.html#experience', 'about': 'index.html#about' },
+                    wo: { 'accueil': 'index.html', 'galerie': 'gallery.html', 'scanner': 'scanner.html' }
+                };
+ 
+                for (const target in pageKeywords[lang]) { if (command.includes(target)) { window.location.href = pageKeywords[lang][target]; return; } }
+            }
         });
     </script>
 

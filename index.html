@@ -238,6 +238,32 @@
             transform: translateX(0);
         }
 
+        /* Voice Command Styles */
+        #voice-command-overlay {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(15px);
+            transition: opacity 0.3s ease-in-out;
+        }
+        #voice-command-btn.listening svg {
+            animation: pulse-mic 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-mic {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        .voice-feedback-wave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.2);
+            transform: translate(-50%, -50%) scale(0);
+            animation: wave 1.5s infinite ease-out;
+        }
+        @keyframes wave { to { transform: translate(-50%, -50%) scale(3); opacity: 0; } }
+
         /* Language Dropdown styles from proj2 adapted for proj1 */
         #languageDropdown a {
             transition: background-color 0.3s ease;
@@ -275,6 +301,10 @@
                     </a>
                     <a href="gallery.html" class="text-sm text-gray-300 hover:text-white transition relative group" data-translate-key="nav_gallery">
                         Galerie
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-600 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="tour.html" class="text-sm text-gray-300 hover:text-white transition relative group" data-translate-key="nav_tour">
+                        Visite 360°
                         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-600 group-hover:w-full transition-all duration-300"></span>
                     </a>
                     <a href="#experience" class="text-sm text-gray-300 hover:text-white transition relative group" data-translate-key="nav_experience">
@@ -324,6 +354,9 @@
         <div class="flex flex-col items-center justify-center h-full space-y-8">
             <a href="index.html" class="text-3xl font-light text-white hover:text-yellow-600 transition" data-translate-key="nav_home">Accueil</a>
             <a href="gallery.html" class="text-3xl font-light text-white hover:text-yellow-600 transition" data-translate-key="nav_gallery">Galerie</a>
+            <a href="tour.html" class="text-3xl font-light text-white hover:text-yellow-600 transition" data-translate-key="nav_tour">
+                Visite 360°
+            </a>
             <a href="#experience" class="text-3xl font-light text-white hover:text-yellow-600 transition" data-translate-key="nav_experience">Expérience</a>
             <a href="#about" class="text-3xl font-light text-white hover:text-yellow-600 transition" data-translate-key="nav_about">À propos</a>
             <button onclick="openScanner()" class="px-8 py-3 bg-yellow-600 text-black font-medium rounded-lg" data-translate-key="nav_scan_button">
@@ -461,6 +494,19 @@
                         Écoutez des narrations professionnelles pour une immersion totale dans l'histoire de chaque pièce.
                     </p>
                 </div>
+            </div>
+
+            <!-- CTA pour la visite virtuelle -->
+            <div class="mt-20 text-center">
+                <a href="tour.html" class="btn-primary px-10 py-4 text-black font-semibold rounded-full inline-flex items-center justify-center space-x-2 hover-glow text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span data-translate-key="experience_tour_button">
+                        Lancer la Visite Virtuelle
+                    </span>
+                </a>
             </div>
         </div>
     </section>
@@ -723,12 +769,32 @@
         </div>
     </footer>
 
+    <!-- Voice Command UI -->
+    <button id="voice-command-btn" class="fixed bottom-6 right-6 w-16 h-16 bg-yellow-600 rounded-full flex items-center justify-center shadow-lg z-50 hover:bg-yellow-700 transition-transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+    </button>
+
+    <div id="voice-command-overlay" class="hidden fixed inset-0 z-50 flex-col items-center justify-center p-4">
+        <div class="relative flex items-center justify-center w-40 h-40">
+            <div class="voice-feedback-wave"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+        </div>
+        <p id="voice-command-feedback" class="mt-8 text-2xl text-white font-light text-center"></p>
+        <p id="voice-command-transcript" class="mt-4 text-lg text-gray-400 font-light text-center h-8"></p>
+        <button id="close-voice-overlay" class="absolute top-6 right-6 text-white text-4xl font-light">&times;</button>
+    </div>
+
     <script>
         // --- Système de traduction (from proj2) ---
         const translations = {
             fr: {
                 nav_home: "Accueil",
                 nav_gallery: "Galerie",
+                nav_tour: "Visite 360°",
                 nav_experience: "Expérience",
                 nav_about: "À propos",
                 nav_scan_button: "Scanner QR",
@@ -751,6 +817,7 @@
                 feature_lang_text: "Explorez le contenu en Français, Anglais et Wolof pour une accessibilité maximale et inclusive.",
                 feature_audio_title: "Guide Audio",
                 feature_audio_text: "Écoutez des narrations professionnelles pour une immersion totale dans l'histoire de chaque pièce.",
+                experience_tour_button: "Lancer la Visite Virtuelle",
                 gallery_tag: "Collections",
                 gallery_title: "<span class='gold-text'>Œuvres</span> Emblématiques",
                 gallery_see_all: "Voir tout",
@@ -788,6 +855,7 @@
             en: {
                 nav_home: "Home",
                 nav_gallery: "Gallery",
+                nav_tour: "360° Tour",
                 nav_experience: "Experience",
                 nav_about: "About",
                 nav_scan_button: "Scan QR",
@@ -810,6 +878,7 @@
                 feature_lang_text: "Explore content in French, English, and Wolof for maximum and inclusive accessibility.",
                 feature_audio_title: "Audio Guide",
                 feature_audio_text: "Listen to professional narrations for a total immersion in the history of each piece.",
+                experience_tour_button: "Start the Virtual Tour",
                 gallery_tag: "Collections",
                 gallery_title: "Iconic <span class='gold-text'>Artworks</span>",
                 gallery_see_all: "See all",
@@ -847,6 +916,7 @@
             wo: {
                 nav_home: "Xët wu njëkk",
                 nav_gallery: "Nataal yi",
+                nav_tour: "Seet 360°",
                 nav_experience: "Nataal",
                 nav_about: "Jëm ci nun",
                 nav_scan_button: "Scanal QR",
@@ -869,6 +939,7 @@
                 feature_lang_text: "Xoolal liñ fi bind ci Français, Anglais ak Wolof ngir ñépp man cee jot.",
                 feature_audio_title: "Tektal ak Baat",
                 feature_audio_text: "Déglul ay nettali yu xarala ngir man a dund jaar-jaaru nataal bu nekk.",
+                experience_tour_button: "Door Seet Gi",
                 gallery_tag: "Nataal yi",
                 gallery_title: "<span class='gold-text'>Nataal</span> yu Siw",
                 gallery_see_all: "Giss lépp",
@@ -1039,6 +1110,104 @@
         document.addEventListener('DOMContentLoaded', () => {
             const savedLang = localStorage.getItem('mcn-lang') || 'fr';
             setLanguage(savedLang);
+        });
+
+        // --- Voice Command Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn("La reconnaissance vocale n'est pas supportée par ce navigateur.");
+                document.getElementById('voice-command-btn').style.display = 'none';
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            const voiceBtn = document.getElementById('voice-command-btn');
+            const voiceOverlay = document.getElementById('voice-command-overlay');
+            const closeOverlayBtn = document.getElementById('close-voice-overlay');
+            const feedbackEl = document.getElementById('voice-command-feedback');
+            const transcriptEl = document.getElementById('voice-command-transcript');
+
+            const updateLang = () => {
+                const currentLang = localStorage.getItem('mcn-lang') || 'fr';
+                recognition.lang = currentLang === 'wo' ? 'fr-FR' : (currentLang + '-FR'); // Wolof n'est pas supporté, on utilise le français
+                feedbackEl.textContent = {
+                    fr: "Je vous écoute...",
+                    en: "I'm listening...",
+                    wo: "Ma ngi lay déglu..."
+                }[currentLang];
+            };
+
+            voiceBtn.addEventListener('click', () => {
+                updateLang();
+                voiceOverlay.classList.remove('hidden');
+                voiceOverlay.classList.add('flex');
+                voiceBtn.classList.add('listening');
+                transcriptEl.textContent = '';
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("Erreur au démarrage de la reconnaissance vocale:", e);
+                    stopListening();
+                }
+            });
+
+            const stopListening = () => {
+                voiceOverlay.classList.add('hidden');
+                voiceOverlay.classList.remove('flex');
+                voiceBtn.classList.remove('listening');
+                recognition.stop();
+            };
+
+            closeOverlayBtn.addEventListener('click', stopListening);
+
+            recognition.onresult = (event) => {
+                let transcript = Array.from(event.results)
+                    .map(result => result[0])
+                    .map(result => result.transcript)
+                    .join('');
+
+                transcriptEl.textContent = transcript;
+
+                if (event.results[0].isFinal) {
+                    handleVoiceCommand(transcript.toLowerCase().trim());
+                    stopListening();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Erreur de reconnaissance vocale:", event.error);
+                stopListening();
+            };
+
+            recognition.onend = () => {
+                stopListening();
+            };
+
+            function handleVoiceCommand(command) {
+                console.log("Commande vocale reçue:", command);
+                const lang = localStorage.getItem('mcn-lang') || 'fr';
+ 
+                // --- Commandes de Navigation (plus flexible) ---
+                const pageKeywords = {
+                    fr: { 'accueil': 'index.html', 'galerie': 'gallery.html', 'scanner': 'scanner.html', 'expérience': '#experience', 'à propos': '#about', 'visite virtuelle': 'tour.html', 'visite 360': 'tour.html' },
+                    en: { 'home': 'index.html', 'gallery': 'gallery.html', 'scanner': 'scanner.html', 'experience': '#experience', 'about': '#about', 'virtual tour': 'tour.html', '360 tour': 'tour.html' },
+                    wo: { 'accueil': 'index.html', 'galerie': 'gallery.html', 'scanner': 'scanner.html', 'seet 360': 'tour.html' }
+                };
+ 
+                // On parcourt les destinations possibles pour la langue actuelle
+                for (const target in pageKeywords[lang]) {
+                    // Si la commande vocale CONTIENT le mot-clé de la destination
+                    if (command.includes(target)) {
+                        console.log(`Mot-clé trouvé: "${target}". Redirection vers ${pageKeywords[lang][target]}`);
+                        window.location.href = pageKeywords[lang][target];
+                        return; // On arrête dès qu'une commande est trouvée
+                    }
+                }
+            }
         });
     </script>
 </body>

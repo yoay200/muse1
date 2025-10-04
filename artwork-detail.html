@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détail de l'œuvre - MCN</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=aspect-ratio"></script> <!-- Ajout du plugin pour le ratio vidéo -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,9 +18,48 @@
         .lang-btn.active { background-color: #d4af37; color: #0a0a0a; border-color: #d4af37; }
         .audio-player { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
         /* Custom audio player styles */
-        audio::-webkit-media-controls-panel { background-color: rgba(255, 255, 255, 0.1); }
-        audio::-webkit-media-controls-play-button { color: #d4af37; }
-        audio::-webkit-media-controls-current-time-display, audio::-webkit-media-controls-time-remaining-display { color: #fff; }
+        .progress-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .progress-bar-inner { background-color: #d4af37; transition: width 0.1s linear; }
+        .tts-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .tts-btn.active { background-color: #d4af37; color: #0a0a0a; }
+        /* Griot Digital Chat styles */
+        .griot-chat-container { backdrop-filter: blur(5px); }
+        .griot-chat-window { background: #111111; border: 1px solid #333; }
+        .griot-chat-header { border-bottom: 1px solid #d4af37; }
+        .griot-chat-messages { scrollbar-width: thin; scrollbar-color: #d4af37 #111; }
+        .griot-chat-messages::-webkit-scrollbar { width: 6px; }
+        .griot-chat-messages::-webkit-scrollbar-track { background: #111; }
+        .griot-chat-messages::-webkit-scrollbar-thumb { background-color: #d4af37; border-radius: 3px; }
+        .griot-message { white-space: pre-wrap; } /* Pour que l'effet machine à écrire respecte les retours à la ligne */
+        .griot-message.user { background: #d4af37; color: #0a0a0a; }
+        .griot-message.ai { background: #222; }
+    </style>
+    <style>
+        /* Voice Command Styles */
+        #voice-command-overlay {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(15px);
+            transition: opacity 0.3s ease-in-out;
+        }
+        #voice-command-btn.listening svg {
+            animation: pulse-mic 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-mic {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        .voice-feedback-wave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.2);
+            transform: translate(-50%, -50%) scale(0);
+            animation: wave 1.5s infinite ease-out;
+        }
+        @keyframes wave { to { transform: translate(-50%, -50%) scale(3); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -77,12 +117,56 @@
                     <!-- Audio Player (will be injected) -->
                     <div id="audio-container" class="mt-8"></div>
 
+                    <!-- Griot Digital CTA -->
+                    <div id="griot-cta-container" class="mt-8"></div>
+
                     <!-- Video Player (will be injected) -->
                     <div id="video-container" class="mt-8"></div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Griot Digital Chat Window -->
+    <div id="griot-chat-container" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 griot-chat-container">
+        <div class="griot-chat-window w-full max-w-lg h-[70vh] flex flex-col rounded-2xl shadow-2xl">
+            <div class="griot-chat-header flex justify-between items-center p-4">
+                <h3 class="text-xl gold-text">Griot Digital</h3>
+                <button id="close-griot-btn" class="text-gray-400 hover:text-white transition">&times;</button>
+            </div>
+            <div id="griot-chat-messages" class="flex-grow p-4 overflow-y-auto space-y-4">
+                <!-- Messages will be injected here -->
+                <div class="griot-message ai p-3 rounded-lg max-w-xs lg:max-w-md">
+                    <p data-translate-key="griot_welcome">Bonjour ! Je suis le Griot Digital. Posez-moi une question sur cette œuvre.</p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <form id="griot-input-form" class="flex gap-2">
+                    <input type="text" id="griot-user-input" placeholder="Posez votre question..." class="flex-1 bg-gray-800 border border-gray-700 rounded-full px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600 transition">
+                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-black font-semibold rounded-full px-4 py-2 transition">Envoyer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Command UI -->
+    <button id="voice-command-btn" class="fixed bottom-6 right-6 w-16 h-16 bg-yellow-600 rounded-full flex items-center justify-center shadow-lg z-50 hover:bg-yellow-700 transition-transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+    </button>
+
+    <div id="voice-command-overlay" class="hidden fixed inset-0 z-50 flex-col items-center justify-center p-4">
+        <div class="relative flex items-center justify-center w-40 h-40">
+            <div class="voice-feedback-wave"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+        </div>
+        <p id="voice-command-feedback" class="mt-8 text-2xl text-white font-light text-center"></p>
+        <p id="voice-command-transcript" class="mt-4 text-lg text-gray-400 font-light text-center h-8"></p>
+        <button id="close-voice-overlay" class="absolute top-6 right-6 text-white text-4xl font-light">&times;</button>
+    </div>
 
     <script>
         // Dictionnaire pour les textes de l'interface
@@ -91,7 +175,14 @@
             en: { back_to_gallery: "Back to gallery", lang_label: "Language:", audio_guide: "Audio-guide", video: "Video", not_found: "Sorry, this artwork was not found." },
             wo: { back_to_gallery: "Dellu ci nataal yi", lang_label: "Làkk:", audio_guide: "Audio-guide", video: "Vidéo", not_found: "Gisagul nataal bi." }
         };
+        // Traductions pour le Griot
+        uiTranslations.fr.griot_error = "Désolé, je n'arrive pas à réfléchir pour le moment. Veuillez réessayer.";
+        uiTranslations.en.griot_error = "Sorry, I can't think right now. Please try again.";
+        uiTranslations.wo.griot_error = "Baal ma, manu maa xalaat léegi. Jëgal ma, doorat.";
 
+        uiTranslations.fr.griot_cta = "Discuter avec le Griot Digital"; uiTranslations.fr.griot_welcome = "Bonjour ! Je suis le Griot Digital. Posez-moi une question sur cette œuvre.";
+        uiTranslations.en.griot_cta = "Chat with the Digital Griot"; uiTranslations.en.griot_welcome = "Hello! I am the Digital Griot. Ask me a question about this artwork.";
+        uiTranslations.wo.griot_cta = "Waxtaan ak Griot Digital bi"; uiTranslations.wo.griot_welcome = "Salaam! Man miy Griot Digital bi. Laajal ma dara ci nataal bii.";
         // --- Database Simulation ---
         const db = {
             artworks: [
@@ -101,21 +192,52 @@
                     origin: 'Sénégal • XIXe siècle', 
                     img: 'https://images.unsplash.com/photo-1547721064-da6cfb341d50?q=80&w=1974',
                     audio: {
-                        fr: './audio/masque-baoule-fr.mp3', // Chemin fictif
-                        en: './audio/masque-baoule-en.mp3',
-                        wo: './audio/masque-baoule-wo.mp3',
+                        fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3',
+                        en: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3',
+                        wo: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3'
                     },
-                    video: './videos/masque-baoule.mp4' // Chemin fictif
+                    youtubeId: 'XPVY1yXwxwY' // ID de la vidéo YouTube
                 },
                 { 
                     id: 2, 
                     title: 'Sculpture Ancestrale', 
                     origin: 'Mali • XVIIIe siècle', 
                     img: 'https://images.unsplash.com/photo-1581610275759-54d14502880f?q=80&w=1974',
-                    audio: { fr: './audio/statue-dogon-fr.mp3' },
-                    video: './videos/statue-dogon.mp4'
+                    audio: { 
+                        fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_1MG.mp3'
+                    },
+                    youtubeId: 'Gr_A3p3D3A0'
                 },
-                // ... add all artworks here
+                { 
+                    id: 3, 
+                    title: 'Textile Traditionnel', 
+                    origin: 'Ghana • XXe siècle', 
+                    img: 'https://images.unsplash.com/photo-1622342838345-541535330a9e?q=80&w=1964',
+                    audio: { fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3' },
+                    youtubeId: '66I21A_g-4I'
+                },
+                { 
+                    id: 4, 
+                    title: 'Céramique Sacrée', 
+                    origin: 'Nigeria • XVIIe siècle', 
+                    img: 'https://images.unsplash.com/photo-1569992326083-a124b1a78947?q=80&w=1974',
+                    youtubeId: 's252aahQ2gM'
+                },
+                { 
+                    id: 5, 
+                    title: 'Bijoux Royaux', 
+                    origin: 'Côte d\'Ivoire • XIXe siècle', 
+                    img: 'https://images.unsplash.com/photo-1619510312991-0a8a4b334a07?q=80&w=1974',
+                    audio: { fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3' }
+                },
+                { 
+                    id: 6, 
+                    title: 'Instrument Sacré', 
+                    origin: 'Bénin • XVIIIe siècle', 
+                    img: 'https://plus.unsplash.com/premium_photo-1678280810283-92e639b52a1c?q=80&w=1974',
+                    audio: { fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3' },
+                    youtubeId: 'YvF29pl06yY'
+                }
             ],
             descriptions: {
                 1: {
@@ -127,12 +249,28 @@
                     fr: `<p>Cette sculpture représente un ancêtre fondateur d'un clan malien. Elle servait de réceptacle aux prières et aux offrandes, assurant la protection et la prospérité de la communauté. La posture droite et le regard serein incarnent la sagesse et l'autorité.</p>`,
                     en: `<p>This sculpture represents a founding ancestor of a Malian clan. It served as a receptacle for prayers and offerings, ensuring the protection and prosperity of the community. The upright posture and serene gaze embody wisdom and authority.</p>`,
                     wo: `<p>Natt bi, ab maamu cosaan la tekktele ci benn giir ci Mali. Dañu ko doon jëfandikoo ngir sàkku ay ñaan ak sargal, ngir mu aar askan wi te may leen wërsëg. Taxawaay bu jub bi ak xool bu dal bi, ñoo di tekki xel ak sañ-sañ.</p>`
-                }
+                },
+                3: {
+                    fr: `<p>Le Kente est un textile traditionnel tissé à la main, symbolisant la royauté et les occasions spéciales. Chaque motif a une signification particulière, comme la sagesse ou la paix.</p>`,
+                    en: `<p>Kente is a hand-woven traditional textile, symbolizing royalty and special occasions. Each pattern has a specific meaning, such as wisdom or peace.</p>`,
+                    wo: `<p>Kente, ab sëru aada la bu ñu rafe ci loxo. Day tekktele buur ak bissi mbégte. Ràññee bu nekk amna tekki, niki xel mbaa jàmm.</p>`
+                },
+                4: {
+                    fr: `<p>Cette céramique Nok, provenant du Nigeria, est l'une des plus anciennes formes d'art en Afrique subsaharienne. Elle était probablement utilisée dans des rituels sacrés, et son style unique a influencé de nombreuses cultures ultérieures.</p>`,
+                    en: `<p>This Nok ceramic, from Nigeria, is one of the oldest forms of art in sub-Saharan Africa. It was likely used in sacred rituals, and its unique style influenced many later cultures.</p>`,
+                    wo: `<p>Poti Nok bii, jóge Niseriya, mooy benn ci caan yu gën a yàgg ci Afrig gu sowwu jant. Manees na ne, dañu ko doon jëfandikoo ci ay xew-xewi diine, te ni mu mel, dafa yokk ay aada yu bari gannaawam.</p>`
+                },
+                5: { fr: `<p>Description non disponible.</p>` },
+                6: { fr: `<p>Description non disponible.</p>` }
             }
         };
 
         // --- Page Logic ---
         document.addEventListener('DOMContentLoaded', () => {
+            // --- CONFIGURATION API GEMINI ---
+            // ! IMPORTANT: Remplacez "VOTRE_CLE_API_ICI" par votre clé API Google Gemini.
+            const GEMINI_API_KEY = "AIzaSyAP63x8vt_32H8FxP2Ia-jIHpjwKepmuSw";
+
             const params = new URLSearchParams(window.location.search);
             const artworkId = parseInt(params.get('id'));
 
@@ -152,12 +290,17 @@
             const descriptionContainer = document.getElementById('artwork-description');
             const audioContainer = document.getElementById('audio-container');
             const videoContainer = document.getElementById('video-container');
+            const griotCtaContainer = document.getElementById('griot-cta-container');
             const langButtons = document.querySelectorAll('.lang-btn');
+            
+            let audioPlayer = null; // Pour garder une référence au lecteur audio
+            let ttsUtterance = null; // Pour la synthèse vocale
 
             function loadContent(lang) {
                 // Translate UI elements
                 document.querySelector('[data-translate-key="back_to_gallery"]').textContent = uiTranslations[lang].back_to_gallery;
                 document.querySelector('[data-translate-key="lang_label"]').textContent = uiTranslations[lang].lang_label;
+                document.querySelector('[data-translate-key="griot_welcome"]').textContent = uiTranslations[lang].griot_welcome;
 
                 // Load artwork content
                 const description = (db.descriptions[artworkId] && db.descriptions[artworkId][lang]) || (db.descriptions[artworkId] && db.descriptions[artworkId]['fr']) || '<p>Description non disponible.</p>';
@@ -166,27 +309,51 @@
                 // Load audio
                 const audioSrc = (artwork.audio && artwork.audio[lang]) || (artwork.audio && artwork.audio['fr']);
                 if (audioSrc) {
+                    // On arrête toute lecture précédente (audio ou tts)
+                    stopAllAudio();
+
                     audioContainer.innerHTML = `
                         <div class="audio-player p-4 rounded-2xl">
-                            <h4 class="font-semibold mb-3 text-white" data-translate-key="audio_guide">${uiTranslations[lang].audio_guide}</h4>
-                            <audio controls class="w-full">
-                                <source src="${audioSrc}" type="audio/mpeg">
-                                Votre navigateur ne supporte pas l'élément audio.
-                            </audio>
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-semibold text-white" data-translate-key="audio_guide">${uiTranslations[lang].audio_guide}</h4>
+                                <button id="tts-btn" class="tts-btn text-xs px-3 py-1 border border-gray-600 rounded-full hover:bg-gray-700 transition" title="Écouter la description">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                                    Écouter
+                                </button>
+                            </div>
+                            <audio id="audio-element" src="${audioSrc}" class="hidden"></audio>
+                            <div class="flex items-center gap-4">
+                                <button id="play-pause-btn" class="text-yellow-600 text-2xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <div class="flex-grow flex items-center gap-2">
+                                    <span id="current-time" class="text-xs w-10 text-center">0:00</span>
+                                    <div id="progress-bar" class="progress-bar w-full h-1.5 rounded-full cursor-pointer"><div id="progress-bar-inner" class="progress-bar-inner h-full rounded-full"></div></div>
+                                    <span id="total-duration" class="text-xs w-10 text-center">0:00</span>
+                                </div>
+                            </div>
                         </div>`;
+                    initializePlayer(lang);
                 } else {
                     audioContainer.innerHTML = '';
                 }
 
-                // Load video
-                if (artwork.video) {
+                // Load Griot CTA
+                griotCtaContainer.innerHTML = `
+                    <button id="open-griot-btn" class="w-full text-left p-4 rounded-2xl flex items-center justify-between transition hover:bg-white/10" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.2);">
+                        <span class="font-semibold text-yellow-500" data-translate-key="griot_cta">${uiTranslations[lang].griot_cta}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                    </button>
+                `;
+
+                // Load YouTube video
+                if (artwork.youtubeId) {
                     videoContainer.innerHTML = `
                         <div class="mt-8">
                             <h4 class="font-semibold mb-3 text-white" data-translate-key="video">${uiTranslations[lang].video}</h4>
-                            <video controls class="w-full rounded-lg">
-                                <source src="${artwork.video}" type="video/mp4">
-                                Votre navigateur ne supporte pas l'élément vidéo.
-                            </video>
+                            <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden">
+                                <iframe src="https://www.youtube.com/embed/${artwork.youtubeId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full"></iframe>
+                            </div>
                         </div>`;
                 } else {
                     videoContainer.innerHTML = '';
@@ -198,9 +365,253 @@
                 });
             }
 
+            function stopAllAudio() {
+                if (audioPlayer) {
+                    audioPlayer.pause();
+                    audioPlayer = null;
+                }
+                window.speechSynthesis.cancel();
+                const ttsBtn = document.getElementById('tts-btn');
+                if(ttsBtn) ttsBtn.classList.remove('active');
+            }
+
+            function initializePlayer(lang) {
+                audioPlayer = document.getElementById('audio-element');
+                const playPauseBtn = document.getElementById('play-pause-btn');
+                const progressBar = document.getElementById('progress-bar');
+                const progressBarInner = document.getElementById('progress-bar-inner');
+                const currentTimeEl = document.getElementById('current-time');
+                const totalDurationEl = document.getElementById('total-duration');
+                const ttsBtn = document.getElementById('tts-btn');
+
+                const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>`;
+                const pauseIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
+
+                function formatTime(seconds) {
+                    const min = Math.floor(seconds / 60);
+                    const sec = Math.floor(seconds % 60);
+                    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+                }
+
+                playPauseBtn.addEventListener('click', () => {
+                    window.speechSynthesis.cancel(); // Arrête la synthèse vocale si elle est active
+                    ttsBtn.classList.remove('active');
+                    if (audioPlayer.paused) {
+                        audioPlayer.play();
+                    } else {
+                        audioPlayer.pause();
+                    }
+                });
+
+                audioPlayer.addEventListener('play', () => { playPauseBtn.innerHTML = pauseIcon; });
+                audioPlayer.addEventListener('pause', () => { playPauseBtn.innerHTML = playIcon; });
+                audioPlayer.addEventListener('ended', () => { playPauseBtn.innerHTML = playIcon; });
+
+                audioPlayer.addEventListener('loadedmetadata', () => {
+                    totalDurationEl.textContent = formatTime(audioPlayer.duration);
+                });
+
+                audioPlayer.addEventListener('timeupdate', () => {
+                    const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    progressBarInner.style.width = `${progress}%`;
+                    currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+                });
+
+                progressBar.addEventListener('click', (e) => {
+                    const rect = progressBar.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const newTime = (clickX / rect.width) * audioPlayer.duration;
+                    audioPlayer.currentTime = newTime;
+                });
+
+                // --- Text-to-Speech Logic ---
+                if ('speechSynthesis' in window) {
+                    ttsBtn.disabled = false;
+
+                    ttsBtn.addEventListener('click', () => {
+                        if (window.speechSynthesis.speaking) {
+                            window.speechSynthesis.cancel(); // Si déjà en train de parler, arrête
+                            return;
+                        }
+
+                        if (audioPlayer && !audioPlayer.paused) {
+                            audioPlayer.pause(); // Met en pause le guide audio
+                        }
+
+                        const textToRead = descriptionContainer.innerText;
+                        ttsUtterance = new SpeechSynthesisUtterance(textToRead);
+                        
+                        // Tente de trouver une voix correspondante à la langue
+                        const voices = window.speechSynthesis.getVoices();
+                        let voiceLang = 'fr-FR';
+                        if (lang === 'en') voiceLang = 'en-US';
+                        if (lang === 'wo') voiceLang = 'fr-FR'; // Fallback pour Wolof
+
+                        ttsUtterance.voice = voices.find(v => v.lang.startsWith(lang)) || voices.find(v => v.lang === voiceLang) || voices.find(v => v.lang.startsWith('fr'));
+                        ttsUtterance.lang = ttsUtterance.voice ? ttsUtterance.voice.lang : voiceLang;
+                        
+                        ttsUtterance.onstart = () => {
+                            ttsBtn.classList.add('active');
+                        };
+                        ttsUtterance.onend = () => {
+                            ttsBtn.classList.remove('active');
+                        };
+                        ttsUtterance.onerror = () => {
+                            ttsBtn.classList.remove('active');
+                        };
+
+                        window.speechSynthesis.speak(ttsUtterance);
+                    });
+
+                    // Assure que les voix sont chargées
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        // On peut mettre à jour la voix ici si nécessaire
+                    };
+
+                } else {
+                    ttsBtn.disabled = true;
+                    ttsBtn.title = "La synthèse vocale n'est pas supportée par votre navigateur.";
+                }
+            }
+
+            // --- Griot Digital Logic ---
+            const griotChatContainer = document.getElementById('griot-chat-container');
+            const closeGriotBtn = document.getElementById('close-griot-btn');
+            const griotInputForm = document.getElementById('griot-input-form');
+            const griotUserInput = document.getElementById('griot-user-input');
+            const griotChatMessages = document.getElementById('griot-chat-messages');
+
+            // Use event delegation for the open button as it's dynamically created
+            document.body.addEventListener('click', function(event) {
+                if (event.target.id === 'open-griot-btn' || event.target.closest('#open-griot-btn')) {
+                    griotChatContainer.classList.remove('hidden');
+                }
+            });
+
+            closeGriotBtn.addEventListener('click', () => {
+                griotChatContainer.classList.add('hidden');
+            });
+
+            griotInputForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const userMessage = griotUserInput.value.trim();
+                if (!userMessage) return;
+
+                appendMessage(userMessage, 'user');
+                griotUserInput.value = '';
+                
+                // Show thinking indicator
+                appendMessage('...', 'ai', true);
+
+                // Prepare context and call AI
+                const lang = localStorage.getItem('mcn-lang') || 'fr';
+                const artworkContext = `
+                    Titre de l'œuvre: ${artwork.title}
+                    Origine: ${artwork.origin}
+                    Description: ${descriptionContainer.innerText}
+                `;
+                
+                callGriotDigitalAPI(userMessage, artworkContext, lang);
+            });
+
+            function appendMessage(text, sender, isThinking = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('griot-message', sender, 'p-3', 'rounded-lg', 'max-w-xs', 'lg:max-w-md');
+                if (sender === 'user') {
+                    messageDiv.classList.add('self-end');
+                }
+                if (isThinking) {
+                    messageDiv.id = 'thinking-indicator';
+                    messageDiv.innerHTML = `<div class="flex items-center space-x-1"><div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div></div>`;
+                } else {
+                    messageDiv.textContent = text;
+                }
+                griotChatMessages.appendChild(messageDiv);
+                griotChatMessages.scrollTop = griotChatMessages.scrollHeight;
+            }
+
+            function typewriterEffect(element, text, onComplete) {
+                let i = 0;
+                const speed = 20; // Vitesse de frappe en ms
+                element.innerHTML = "";
+
+                function type() {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                        griotChatMessages.scrollTop = griotChatMessages.scrollHeight;
+                        setTimeout(type, speed);
+                    } else if (onComplete) {
+                        onComplete();
+                    }
+                }
+                type();
+            }
+
+            async function callGriotDigitalAPI(question, context, lang) {
+                
+                console.log("Calling simulated API with:", { question, context, lang });
+
+                const prompt = `
+                    Tu es le "Griot Digital" du Musée des Civilisations Noires. Ton rôle est de partager la connaissance sur les œuvres d'art africaines avec passion et sagesse.
+                    Un visiteur te pose une question sur une œuvre.
+
+                    Voici le contexte que tu connais sur l'œuvre :
+                    ${context}
+
+                    Voici la question du visiteur : "${question}"
+
+                    Ta mission :
+                    1. Réponds à la question en te basant d'abord sur le contexte fourni.
+                    2. Si le contexte n'est pas suffisant, utilise tes connaissances générales et ta capacité à chercher sur internet pour trouver des informations pertinentes sur l'œuvre, son artiste, son époque, ou son symbolisme.
+                    3. Si, après recherche, tu ne trouves aucune information pour répondre à la question, dis-le honnêtement. Par exemple : "C'est une question très intéressante. Je n'ai pas trouvé de réponse précise dans mes connaissances. Pourriez-vous formuler votre question différemment ou m'interroger sur un autre aspect de l'œuvre ?"
+                    4. Ta réponse doit être dans la langue suivante : ${lang}.
+                    5. Adopte un ton engageant, éducatif et respectueux, comme un vrai griot.
+                `;
+
+                // --- VRAI APPEL À L'API GEMINI ---
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: prompt }]
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+
+                    const thinkingIndicator = document.getElementById('thinking-indicator');
+                    if (thinkingIndicator) {
+                        typewriterEffect(thinkingIndicator, aiResponse, () => {
+                            thinkingIndicator.id = ''; // Retirer l'ID pour ne pas le réutiliser
+                        });
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de l'appel à l'API Griot:", error);
+                    const fallbackResponse = "Je suis désolé, mais je rencontre une difficulté pour formuler une réponse. Cela peut être dû à un problème de connexion ou à une restriction sur la question posée. Pourriez-vous essayer une autre question ?";
+                    const thinkingIndicator = document.getElementById('thinking-indicator');
+                    if (thinkingIndicator) {
+                        typewriterEffect(thinkingIndicator, fallbackResponse, () => { thinkingIndicator.id = ''; });
+                    }
+                }
+            }
+
             // Language switcher logic
             langButtons.forEach(button => {
                 button.addEventListener('click', () => {
+                    stopAllAudio();
                     const newLang = button.dataset.lang;
                     localStorage.setItem('mcn-lang', newLang);
                     loadContent(newLang);
@@ -209,7 +620,162 @@
 
             // Initial load
             const savedLang = localStorage.getItem('mcn-lang') || 'fr';
+            document.querySelector(`.lang-btn[data-lang="${savedLang}"]`).classList.add('active');
             loadContent(savedLang);
+
+            // --- Voice Command Logic ---
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn("La reconnaissance vocale n'est pas supportée par ce navigateur.");
+                document.getElementById('voice-command-btn').style.display = 'none';
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            const voiceBtn = document.getElementById('voice-command-btn');
+            const voiceOverlay = document.getElementById('voice-command-overlay');
+            const closeOverlayBtn = document.getElementById('close-voice-overlay');
+            const feedbackEl = document.getElementById('voice-command-feedback');
+            const transcriptEl = document.getElementById('voice-command-transcript');
+
+            const updateLang = () => {
+                const currentLang = localStorage.getItem('mcn-lang') || 'fr';
+                recognition.lang = currentLang === 'wo' ? 'fr-FR' : (currentLang + '-FR'); // Wolof n'est pas supporté, on utilise le français
+                feedbackEl.textContent = {
+                    fr: "Je vous écoute...",
+                    en: "I'm listening...",
+                    wo: "Ma ngi lay déglu..."
+                }[currentLang];
+            };
+
+            voiceBtn.addEventListener('click', () => {
+                updateLang();
+                voiceOverlay.classList.remove('hidden');
+                voiceOverlay.classList.add('flex');
+                voiceBtn.classList.add('listening');
+                transcriptEl.textContent = '';
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("Erreur au démarrage de la reconnaissance vocale:", e);
+                    stopListening();
+                }
+            });
+
+            const stopListening = () => {
+                voiceOverlay.classList.add('hidden');
+                voiceOverlay.classList.remove('flex');
+                voiceBtn.classList.remove('listening');
+                recognition.stop();
+            };
+
+            closeOverlayBtn.addEventListener('click', stopListening);
+
+            recognition.onresult = (event) => {
+                let transcript = Array.from(event.results)
+                    .map(result => result[0])
+                    .map(result => result.transcript)
+                    .join('');
+
+                transcriptEl.textContent = transcript;
+
+                if (event.results[0].isFinal) {
+                    handleVoiceCommand(transcript.toLowerCase().trim());
+                    stopListening();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Erreur de reconnaissance vocale:", event.error);
+                stopListening();
+            };
+
+            recognition.onend = () => {
+                stopListening();
+            };
+
+            function handleVoiceCommand(command) {
+                console.log("Commande vocale reçue:", command);
+                const lang = localStorage.getItem('mcn-lang') || 'fr';
+
+                // --- Commande pour changer de langue ---
+                const langKeywords = {
+                    fr: { "français": "fr", "anglais": "en", "wolof": "wo" },
+                    en: { "french": "fr", "english": "en", "wolof": "wo" },
+                    wo: { "français": "fr", "anglais": "en", "wolof": "wo" }
+                };
+                const changeLangKeywords = { fr: ["mets en", "change en", "parle en"], en: ["change to", "set to", "speak in"], wo: ["soppi ci", "def ko", "waxal ci"] };
+
+                for (const changeKeyword of changeLangKeywords[lang]) {
+                    if (command.includes(changeKeyword)) {
+                        for (const langName in langKeywords[lang]) {
+                            if (command.includes(langName)) {
+                                const langCode = langKeywords[lang][langName];
+                                const langButton = document.querySelector(`.lang-btn[data-lang="${langCode}"]`);
+                                if (langButton) { langButton.click(); return; }
+                            }
+                        }
+                    }
+                }
+
+                // --- Commande pour la lecture de la description (Text-to-Speech) ---
+                const listenKeywords = {
+                    fr: ["parle-moi", "décris-moi", "description", "écoute"],
+                    en: ["tell me", "describe", "description", "listen"],
+                    wo: ["nettali", "tektal", "déglu"]
+                };
+                if (listenKeywords[lang].some(keyword => command.includes(keyword))) {
+                    const ttsBtn = document.getElementById('tts-btn');
+                    if (ttsBtn) { 
+                        console.log("Activation du TTS par commande vocale.");
+                        ttsBtn.click(); 
+                        return; 
+                    }
+                }
+
+                // --- Commande pour l'audio-guide ---
+                const audioGuideKeywords = {
+                    fr: ["guide audio", "audio-guide", "musique", "joue l'audio"],
+                    en: ["audio guide", "music"],
+                    wo: ["audio-guide", "wuy"]
+                };
+                if (audioGuideKeywords[lang].some(keyword => command.includes(keyword))) {
+                    const playBtn = document.getElementById('play-pause-btn');
+                    if (playBtn) { 
+                        console.log("Activation de l'audio-guide par commande vocale.");
+                        playBtn.click(); 
+                        return; 
+                    }
+                }
+
+                // --- Commande pour la vidéo ---
+                const videoKeywords = {
+                    fr: ["vidéo", "montre la vidéo", "clip"],
+                    en: ["video", "show the video", "clip"],
+                    wo: ["wideo", "wone ma wideo bi"]
+                };
+                if (videoKeywords[lang].some(keyword => command.includes(keyword))) {
+                    const videoEl = document.getElementById('video-container');
+                    if (videoEl && videoEl.innerHTML.trim() !== '') {
+                        console.log("Défilement vers la vidéo");
+                        const iframe = videoEl.querySelector('iframe');
+                        if (iframe) {
+                            iframe.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            // On ne peut pas lancer la lecture d'un iframe YouTube par JS pour des raisons de sécurité,
+                            // mais on peut attirer l'attention de l'utilisateur dessus.
+                            iframe.focus();
+                        }
+                        return;
+                    }
+                }
+
+                // --- Commandes de Navigation (fallback) ---
+                const pageKeywords = { fr: { 'accueil': 'index.html', 'galerie': 'gallery.html', 'scanner': 'scanner.html' }, en: { 'home': 'index.html', 'gallery': 'gallery.html', 'scanner': 'scanner.html' }, wo: { 'accueil': 'index.html', 'galerie': 'gallery.html', 'scanner': 'scanner.html' } };
+                for (const target in pageKeywords[lang]) { if (command.includes(target)) { window.location.href = pageKeywords[lang][target]; return; } }
+            }
         });
     </script>
 </body>
