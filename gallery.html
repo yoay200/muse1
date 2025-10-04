@@ -149,6 +149,12 @@
                 ? artworks
                 : artworks.filter(art => art.category === filter);
 
+            if (filteredArtworks.length === 0) {
+                const lang = localStorage.getItem('mcn-lang') || 'fr';
+                const noResultText = translations[lang]?.no_artwork_found || "Aucune œuvre trouvée dans cette catégorie.";
+                galleryGrid.innerHTML = `<p class="text-gray-400 col-span-full text-center">${noResultText}</p>`;
+                return;
+            }
             filteredArtworks.forEach(art => {
                 const card = `
                     <a href="artwork-detail.html?id=${art.id}" class="artwork-card group block aspect-[4/5] rounded-2xl overflow-hidden" data-category="${art.category}">
@@ -191,7 +197,8 @@
                 filter_sculptures: "Sculptures",
                 filter_textiles: "Textiles",
                 filter_jewelry: "Bijoux",
-                filter_instruments: "Instruments"
+                filter_instruments: "Instruments",
+                no_artwork_found: "Aucune œuvre trouvée dans cette catégorie."
             },
             en: {
                 nav_home: "Home",
@@ -206,7 +213,8 @@
                 filter_sculptures: "Sculptures",
                 filter_textiles: "Textiles",
                 filter_jewelry: "Jewelry",
-                filter_instruments: "Instruments"
+                filter_instruments: "Instruments",
+                no_artwork_found: "No artwork found in this category."
             },
             wo: {
                 nav_home: "Xët wu njëkk",
@@ -221,7 +229,8 @@
                 filter_sculptures: "Natt yi",
                 filter_textiles: "Sëru yi",
                 filter_jewelry: "Takk yi",
-                filter_instruments: "Jumtukaay yi"
+                filter_instruments: "Jumtukaay yi",
+                no_artwork_found: "Amul benn nataal ci wall bi."
             }
         };
 

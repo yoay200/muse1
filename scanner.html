@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- 1. Ajout de la librairie de scan QR -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
-    <style>
+    <style> /* Styles alignés avec index.html */
         body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #ffffff; }
         h1 { font-family: 'Cormorant Garamond', serif; font-weight: 300; }
 
@@ -21,7 +21,7 @@
             max-width: 400px;
             aspect-ratio: 1 / 1;
             margin: 0 auto;
-            border-radius: 24px;
+            border-radius: 1.5rem; /* 24px */
             overflow: hidden;
             background: #111; /* Fallback background */
         }
@@ -54,12 +54,12 @@
             position: absolute;
             width: 60px;
             height: 60px;
-            border: 4px solid #d4af37;
-            border-radius: 12px;
+            border: 4px solid #d4af37; /* gold */
+            border-radius: 0.75rem; /* 12px */
         }
         .viewfinder::before {
-            top: 20px;
-            left: 20px;
+            top: 1.25rem; /* 20px */
+            left: 1.25rem; /* 20px */
             border-right: none;
             border-bottom: none;
         }
@@ -78,12 +78,59 @@
             width: 90%;
             height: 3px;
             background: linear-gradient(90deg, transparent, #d4af37, transparent);
-            box-shadow: 0 0 15px #d4af37;
+            box-shadow: 0 0 15px 5px rgba(212, 175, 55, 0.5);
             animation: scan-anim 3s ease-in-out infinite;
         }
         @keyframes scan-anim {
-            0% { transform: translateY(20px); }
-            50% { transform: translateY(calc(400px - 20px)); } /* 400px = max-width */
+            0% { transform: translateY(1.25rem); }
+            50% { transform: translateY(calc(100% - 1.25rem)); }
+            100% { transform: translateY(1.25rem); }
+        }
+
+        /* Styles pour personnaliser l'interface de la librairie html5-qrcode */
+        #qr-reader__dashboard_section_csr, #qr-reader__dashboard_section_fsr {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        #qr-reader__dashboard_section button,
+        #html5-qrcode-button-camera-permission {
+            background-color: #d4af37; /* gold */
+            color: #0a0a0a;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        #qr-reader__dashboard_section button:hover,
+        #html5-qrcode-button-camera-permission:hover {
+            background-color: #f4e5a1; /* lighter gold */
+        }
+
+        #qr-reader__dashboard_section a {
+            color: #d4af37;
+            font-size: 0.9rem;
+        }
+
+        #html5-qrcode-select-camera {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid #4b5563; /* gray-600 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+        @keyframes scan-anim {
+            0% { transform: translateY(1.25rem); }
+            50% { transform: translateY(calc(100% - 1.25rem)); }
             100% { transform: translateY(20px); }
         }
     </style>
@@ -91,10 +138,10 @@
 <body class="flex flex-col items-center justify-center min-h-screen p-6">
 
     <div class="text-center max-w-md w-full">
-        <a href="index.html" class="inline-block mb-8 text-gray-400 hover:text-white transition" data-translate-key="back_to_home">&larr; Retour à l'accueil</a>
+        <a href="index.html" class="inline-flex items-center mb-8 text-gray-400 hover:text-yellow-600 transition" data-translate-key="back_to_home">&larr; Retour à l'accueil</a>
 
-        <h1 class="text-4xl mb-4" data-translate-key="scan_title">Scanner une œuvre</h1>
-        <p class="text-gray-400 mb-8" data-translate-key="scan_subtitle">
+        <h1 class="text-5xl md:text-6xl font-light mb-4" data-translate-key="scan_title">Scanner une œuvre</h1>
+        <p class="text-lg text-gray-400 mb-8 font-light" data-translate-key="scan_subtitle">
             Autorisez l'accès à votre caméra et visez le QR code.
         </p>
 
@@ -102,11 +149,25 @@
         <div class="scanner-container">
             <div id="qr-reader"></div>
             <div class="viewfinder">
+                <!-- Cet élément sera affiché en cas d'erreur de caméra -->
+                <div id="camera-error-overlay" class="absolute inset-0 bg-black/80 flex-col items-center justify-center p-4 text-center hidden">
+                    <!-- Le contenu sera injecté par le script -->
+                </div>
                 <div class="scan-line"></div>
             </div>
         </div>
 
-        <div id="feedback" class="mt-6 text-yellow-600 h-6 transition-opacity"></div>
+        <div id="feedback" class="mt-6 text-yellow-500 h-6 transition-opacity"></div>
+
+        <!-- Boutons d'action sous le scanner -->
+        <div class="mt-4 flex justify-center items-center gap-4">
+            <button id="switch-camera-btn" class="hidden px-5 py-2.5 bg-gray-800 border border-gray-700 rounded-full text-sm font-medium hover:bg-gray-700 transition" data-translate-key="switch_camera_button">
+                Changer de caméra
+            </button>
+            <button onclick="window.location.reload()" class="px-5 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-black font-medium rounded-full transition text-sm" data-translate-key="camera_retry_button">
+                Réessayer
+            </button>
+        </div>
     </div>
 
     <!-- 3. Script d'initialisation du scanner -->
@@ -116,33 +177,52 @@
                 back_to_home: "&larr; Retour à l'accueil",
                 scan_title: "Scanner une œuvre",
                 scan_subtitle: "Autorisez l'accès à votre caméra et visez le QR code.",
-                scan_feedback: "Œuvre trouvée ! Redirection en cours..."
+                scan_feedback: "Œuvre trouvée ! Redirection en cours...",
+                camera_denied_title: "Accès caméra refusé",
+                camera_denied_text: "Pour scanner un QR code, l'accès à la caméra est nécessaire. Veuillez recharger la page et autoriser l'accès.",
+                camera_retry_button: "Réessayer",
+                switch_camera_button: "Changer de caméra"
             },
             en: {
                 back_to_home: "&larr; Back to home",
                 scan_title: "Scan an Artwork",
                 scan_subtitle: "Allow camera access and aim at the QR code.",
-                scan_feedback: "Artwork found! Redirecting..."
+                scan_feedback: "Artwork found! Redirecting...",
+                camera_denied_title: "Camera Access Denied",
+                camera_denied_text: "To scan a QR code, camera access is required. Please reload the page and grant permission.",
+                camera_retry_button: "Retry",
+                switch_camera_button: "Switch Camera"
             },
             wo: {
                 back_to_home: "&larr; Dellu ci xët wu njëkk",
                 scan_title: "Scanal ab Nataal",
                 scan_subtitle: "Maye sa camera doxalin te jëmal ko ci QR code bi.",
-                scan_feedback: "Gis nañu nataal bi! Yónni nañu la..."
+                scan_feedback: "Gis nañu nataal bi! Yónni nañu la...",
+                camera_denied_title: "Nanguwul Camera",
+                camera_denied_text: "Ngir man a scanal QR code, laaj na nga maye sa camera. Bësal fii ngir doorat.",
+                camera_retry_button: "Doorat",
+                switch_camera_button: "Soppi Camera"
             }
         };
 
         document.addEventListener('DOMContentLoaded', (event) => {
             const feedbackEl = document.getElementById('feedback');
+            const cameraErrorOverlay = document.getElementById('camera-error-overlay');
+            const switchCameraButton = document.getElementById('switch-camera-btn');
             const lang = localStorage.getItem('mcn-lang') || 'fr';
+
+            let html5QrcodeScanner;
+            let currentFacingMode = "environment"; // Commence par la caméra arrière
 
             function onScanSuccess(decodedText, decodedResult) {
                 // `decodedText` contient l'URL ou le texte du QR code.
                 console.log(`Code scanné = ${decodedText}`, decodedResult);
                 feedbackEl.textContent = translations[lang].scan_feedback;
 
-                // Arrête le scanner pour ne pas continuer à scanner en arrière-plan
-                html5QrcodeScanner.clear();
+                // Arrête le scanner
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.clear().catch(err => console.error("Failed to clear scanner on success", err));
+                }
 
                 // Redirige l'utilisateur vers l'URL contenue dans le QR code.
                 // Pour que cela fonctionne, vos QR codes doivent contenir des liens directs,
@@ -152,29 +232,71 @@
 
             function onScanFailure(error) {
                 // Cette fonction est appelée en continu tant qu'aucun QR code n'est trouvé.
-                // Il est préférable de ne rien afficher pour ne pas surcharger l'interface.
-                // console.warn(`Erreur de scan = ${error}`);
+                // On vérifie si l'erreur est due à un refus de permission.
+                if (error.includes("NotAllowedError") || error.includes("Permission denied")) {
+                    // Arrête toute tentative de scan
+                    if (html5QrcodeScanner) {
+                        html5QrcodeScanner.clear().catch(err => console.error("Failed to clear scanner on error", err));
+                    }
+
+                    // Affiche un message d'erreur personnalisé
+                    cameraErrorOverlay.innerHTML = `
+                        <h3 class="text-2xl font-semibold text-yellow-500 mb-3">${translations[lang].camera_denied_title}</h3>
+                        <p class="text-gray-300 mb-6">${translations[lang].camera_denied_text}</p>
+                        <button onclick="window.location.reload()" class="px-6 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-black font-medium rounded-lg transition text-sm">
+                            ${translations[lang].camera_retry_button}
+                        </button>
+                    `;
+                    cameraErrorOverlay.classList.remove('hidden');
+                    cameraErrorOverlay.classList.add('flex');
+                }
             }
 
-            // Crée une nouvelle instance du scanner.
-            const html5QrcodeScanner = new Html5QrcodeScanner(
-                "qr-reader", // ID de l'élément HTML où afficher le scanner
-                { 
-                    fps: 10, // Images par seconde pour le scan
-                    qrbox: (viewfinderWidth, viewfinderHeight) => {
-                        // On définit une boîte de scan qui correspond à 80% de la plus petite dimension
-                        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                        const qrboxSize = Math.floor(minEdge * 0.8);
-                        return { width: qrboxSize, height: qrboxSize };
+            function startScanner(facingMode) {
+                // Crée une nouvelle instance du scanner.
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "qr-reader", // ID de l'élément HTML où afficher le scanner
+                    { 
+                        fps: 10, // Images par seconde pour le scan
+                        qrbox: (viewfinderWidth, viewfinderHeight) => {
+                            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                            const qrboxSize = Math.floor(minEdge * 0.8);
+                            return { width: qrboxSize, height: qrboxSize };
+                        },
+                        rememberLastUsedCamera: false, // Important pour le changement manuel
+                        facingMode: facingMode
                     },
-                    rememberLastUsedCamera: true, // Se souvenir de la dernière caméra utilisée
-                    // Ajout pour privilégier la caméra arrière (téléphone)
-                    facingMode: "environment"
-                },
-                /* verbose= */ false); // Mettre à `true` pour plus de logs de débogage
-            
-            // Lance le rendu du scanner.
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                    /* verbose= */ false);
+                
+                // Lance le rendu du scanner.
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            }
+
+            // Vérifie s'il y a plusieurs caméras et affiche le bouton si c'est le cas
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length > 1) {
+                    switchCameraButton.classList.remove('hidden');
+                }
+            }).catch(err => {
+                console.error("Impossible d'obtenir la liste des caméras.", err);
+            });
+
+            // Logique du bouton de changement de caméra
+            switchCameraButton.addEventListener('click', () => {
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.clear()
+                        .then(() => {
+                            currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+                            startScanner(currentFacingMode);
+                        })
+                        .catch(err => {
+                            console.error("Erreur lors du nettoyage du scanner pour changer de caméra", err);
+                        });
+                }
+            });
+
+            // Lancement initial du scanner
+            startScanner(currentFacingMode);
 
             // Appliquer les traductions
             document.querySelectorAll('[data-translate-key]').forEach(element => {
