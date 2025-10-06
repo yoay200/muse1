@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemples de QR Codes - MCN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #0a0a0a; 
+            color: #ffffff; 
+        }
+        h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; font-weight: 300; }
+        .gold-text { 
+            background: linear-gradient(135deg, #d4af37 0%, #f4e5a1 50%, #d4af37 100%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text; 
+        }
+        .qr-code-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .qr-code-container:hover {
+            transform: translateY(-8px);
+            background: rgba(212, 175, 55, 0.1);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+    </style>
+</head>
+<body class="py-16 px-6">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <a href="index.html" class="text-sm text-gray-400 hover:text-yellow-600 transition mb-8 inline-block">&larr; Retour à l'accueil</a>
+            <h1 class="text-5xl md:text-7xl font-light mb-4">Exemples de <span class="gold-text">QR Codes</span></h1>
+            <p class="text-lg text-gray-400 max-w-2xl mx-auto font-light">
+                Utilisez la page <a href="scanner.html" class="text-yellow-500 underline">Scanner</a> de votre téléphone pour tester ces codes.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            
+            <!-- QR Code pour l'œuvre ID 1 -->
+            <div class="qr-code-container p-6 rounded-2xl text-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://yoay200.github.io/muse1/artwork-detail.html?id=1" 
+                     alt="QR Code pour Masque Rituel" 
+                     class="w-full h-auto object-cover rounded-lg mx-auto mb-4">
+                <h3 class="font-semibold text-lg">Masque Rituel</h3>
+                <p class="text-sm text-gray-400">ID: 1</p>
+            </div>
+
+            <!-- QR Code pour l'œuvre ID 2 -->
+            <div class="qr-code-container p-6 rounded-2xl text-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://yoay200.github.io/muse1/artwork-detail.html?id=2" 
+                     alt="QR Code pour Sculpture Ancestrale" 
+                     class="w-full h-auto object-cover rounded-lg mx-auto mb-4">
+                <h3 class="font-semibold text-lg">Sculpture Ancestrale</h3>
+                <p class="text-sm text-gray-400">ID: 2</p>
+            </div>
+
+            <!-- QR Code pour l'œuvre ID 3 -->
+            <div class="qr-code-container p-6 rounded-2xl text-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://yoay200.github.io/muse1/artwork-detail.html?id=3" 
+                     alt="QR Code pour Textile Traditionnel" 
+                     class="w-full h-auto object-cover rounded-lg mx-auto mb-4">
+                <h3 class="font-semibold text-lg">Textile Traditionnel</h3>
+                <p class="text-sm text-gray-400">ID: 3</p>
+            </div>
+
+            <!-- QR Code pour l'œuvre ID 4 -->
+            <div class="qr-code-container p-6 rounded-2xl text-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://yoay200.github.io/muse1/artwork-detail.html?id=4" 
+                     alt="QR Code pour Céramique Sacrée" 
+                     class="w-full h-auto object-cover rounded-lg mx-auto mb-4">
+                <h3 class="font-semibold text-lg">Céramique Sacrée</h3>
+                <p class="text-sm text-gray-400">ID: 4</p>
+            </div>
+
+            <!-- QR Code pour l'œuvre ID 5 -->
+            <div class="qr-code-container p-6 rounded-2xl text-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://yoay200.github.io/muse1/artwork-detail.html?id=5" 
+                     alt="QR Code pour Bijoux Royaux" 
+                     class="w-full h-auto object-cover rounded-lg mx-auto mb-4">
+                <h3 class="font-semibold text-lg">Bijoux Royaux</h3>
+                <p class="text-sm text-gray-400">ID: 5</p>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
+
