@@ -131,7 +131,7 @@
     <div id="griot-chat-container" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 griot-chat-container">
         <div class="griot-chat-window w-full max-w-lg h-[70vh] flex flex-col rounded-2xl shadow-2xl">
             <div class="griot-chat-header flex justify-between items-center p-4">
-                <h3 class="text-xl gold-text">Griot Digital</h3>
+                <h3 class="text-xl gold-text" data-translate-key="griot_header">Griot Digital</h3>
                 <button id="close-griot-btn" class="text-gray-400 hover:text-white transition">&times;</button>
             </div>
             <div id="griot-chat-messages" class="flex-grow p-4 overflow-y-auto space-y-4">
@@ -142,8 +142,8 @@
             </div>
             <div class="p-4 border-t border-gray-800">
                 <form id="griot-input-form" class="flex gap-2">
-                    <input type="text" id="griot-user-input" placeholder="Posez votre question..." class="flex-1 bg-gray-800 border border-gray-700 rounded-full px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600 transition">
-                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-black font-semibold rounded-full px-4 py-2 transition">Envoyer</button>
+                    <input type="text" id="griot-user-input" placeholder="Posez votre question..." data-translate-key="griot_input_placeholder" class="flex-1 bg-gray-800 border border-gray-700 rounded-full px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600 transition">
+                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-black font-semibold rounded-full px-4 py-2 transition" data-translate-key="griot_send">Envoyer</button>
                 </form>
             </div>
         </div>
@@ -187,56 +187,70 @@
         const db = {
             artworks: [
                 { 
-                    id: 1, 
-                    title: 'Masque Rituel', 
-                    origin: 'Sénégal • XIXe siècle', 
-                    img: 'https://images.unsplash.com/photo-1547721064-da6cfb341d50?q=80&w=1974',
+                    id: 1,
+                    title: { fr: 'Masque Rituel', en: 'Ritual Mask', wo: 'Masque bu Aada' },
+                    origin: { fr: 'Sénégal • XIXe siècle', en: 'Senegal • 19th century', wo: 'Senegaal • XIXe xarnu' },
+                    img: 'images/Masque Rituel.jpg',
                     audio: {
                         fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3',
                         en: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3',
                         wo: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3'
                     },
-                    youtubeId: 'XPVY1yXwxwY' // ID de la vidéo YouTube
+                    youtubeId: 'L95jGj3ew28' // ID de la vidéo YouTube
                 },
                 { 
-                    id: 2, 
-                    title: 'Sculpture Ancestrale', 
-                    origin: 'Mali • XVIIIe siècle', 
-                    img: 'https://images.unsplash.com/photo-1581610275759-54d14502880f?q=80&w=1974',
+                    id: 2,
+                    title: { fr: 'Sculpture Ancestrale', en: 'Ancestral Sculpture', wo: 'Nattu Maam' },
+                    origin: { fr: 'Mali • XVIIIe siècle', en: 'Mali • 18th century', wo: 'Mali • XVIIIe xarnu' },
+                    img: 'images/Sculpture Ancestrale.jpg',
                     audio: { 
                         fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_1MG.mp3'
                     },
-                    youtubeId: 'Gr_A3p3D3A0'
+                    youtubeId: 'z0sS3OfXCNI'
                 },
                 { 
-                    id: 3, 
-                    title: 'Textile Traditionnel', 
-                    origin: 'Ghana • XXe siècle', 
-                    img: 'https://images.unsplash.com/photo-1622342838345-541535330a9e?q=80&w=1964',
+                    id: 3,
+                    title: { fr: 'Textile Traditionnel', en: 'Traditional Textile', wo: 'Sëru Aada' },
+                    origin: { fr: 'Ghana • XXe siècle', en: 'Ghana • 20th century', wo: 'Gana • XXe xarnu' },
+                    img: 'images/Textile Traditionnel.jpg',
                     audio: { fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3' },
-                    youtubeId: '66I21A_g-4I'
+                    youtubeId: 'esQWR_Gm4kw'
                 },
                 { 
-                    id: 4, 
-                    title: 'Céramique Sacrée', 
-                    origin: 'Nigeria • XVIIe siècle', 
-                    img: 'https://images.unsplash.com/photo-1569992326083-a124b1a78947?q=80&w=1974',
+                    id: 4,
+                    title: { fr: 'Céramique Sacrée', en: 'Sacred Ceramics', wo: 'Poti bu Sell' },
+                    origin: { fr: 'Nigeria • XVIIe siècle', en: 'Nigeria • 17th century', wo: 'Niseriya • XVIIe xarnu' },
+                    img: 'images/Céramique Sacrée.jpg',
                     youtubeId: 's252aahQ2gM'
                 },
                 { 
-                    id: 5, 
-                    title: 'Bijoux Royaux', 
-                    origin: 'Côte d\'Ivoire • XIXe siècle', 
-                    img: 'https://images.unsplash.com/photo-1619510312991-0a8a4b334a07?q=80&w=1974',
+                    id: 5,
+                    title: { fr: 'Bijoux Royaux', en: 'Royal Jewelry', wo: 'Takk yu Buur' },
+                    origin: { fr: 'Côte d\'Ivoire • XIXe siècle', en: 'Ivory Coast • 19th century', wo: 'Kot Diwaar • XIXe xarnu' },
+                    img: 'images/Bijoux Royaux.jpg',
                     audio: { fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3' }
                 },
                 { 
-                    id: 6, 
-                    title: 'Instrument Sacré', 
-                    origin: 'Bénin • XVIIIe siècle', 
-                    img: 'https://plus.unsplash.com/premium_photo-1678280810283-92e639b52a1c?q=80&w=1974',
+                    id: 6,
+                    title: { fr: 'Instrument Sacré', en: 'Sacred Instrument', wo: 'Jumtukaay bu Sell' },
+                    origin: { fr: 'Bénin • XVIIIe siècle', en: 'Benin • 18th century', wo: 'Benin • XVIIIe xarnu' },
+                    img: 'images/Instrument Sacré.jpg',
                     audio: { fr: 'https://file-examples.com/storage/fe52cb0c4862dc676a1b341/2017/11/file_example_MP3_700KB.mp3' },
                     youtubeId: 'YvF29pl06yY'
+                },
+                { 
+                    id: 7,
+                    title: { fr: 'Masque Punu', en: 'Punu Mask', wo: 'Masque Punu' },
+                    origin: { fr: 'Gabon • XIXe siècle', en: 'Gabon • 19th century', wo: 'Gaboŋ • XIXe xarnu' },
+                    img: 'images/Masque Punu.jpg',
+                    youtubeId: 'dQw4w9WgXcQ'
+                },
+                { 
+                    id: 8,
+                    title: { fr: 'Statuette en Bronze', en: 'Bronze Statuette', wo: 'Natt ci Bronse' },
+                    origin: { fr: 'Royaume du Bénin • XVIe siècle', en: 'Kingdom of Benin • 16th century', wo: 'Nguuru Benin • XVIe xarnu' },
+                    img: 'images/Statuette en Bronze.jpg',
+                    youtubeId: 'a3Z7zEc7AXQ' 
                 }
             ],
             descriptions: {
@@ -260,8 +274,18 @@
                     en: `<p>This Nok ceramic, from Nigeria, is one of the oldest forms of art in sub-Saharan Africa. It was likely used in sacred rituals, and its unique style influenced many later cultures.</p>`,
                     wo: `<p>Poti Nok bii, jóge Niseriya, mooy benn ci caan yu gën a yàgg ci Afrig gu sowwu jant. Manees na ne, dañu ko doon jëfandikoo ci ay xew-xewi diine, te ni mu mel, dafa yokk ay aada yu bari gannaawam.</p>`
                 },
-                5: { fr: `<p>Description non disponible.</p>` },
-                6: { fr: `<p>Description non disponible.</p>` }
+                5: { fr: `<p>Ces bijoux, souvent en or, étaient des symboles de statut et de pouvoir au sein des cours royales ivoiriennes. Ils étaient portés lors de cérémonies importantes et transmis comme héritage précieux.</p>`, en: `<p>These jewels, often made of gold, were symbols of status and power within the Ivorian royal courts. They were worn during important ceremonies and passed down as precious heirlooms.</p>`, wo: `<p>Takk yii, yu ci ëpp ci wurus lañu leen defar, di woon tekki sañ-sañ ak nguur ci biir pénci buur yi ci Kot Diwaar. Dañu leen doon takk ci ay xew-xew yu am solo, te di leen wàcce ci ay maam.</p>` },
+                6: { fr: `<p>Cet instrument, probablement une harpe ou une kora, n'était pas seulement utilisé pour la musique mais aussi pour la narration d'épopées et la transmission de l'histoire orale. Chaque son avait une signification profonde.</p>`, en: `<p>This instrument, likely a harp or kora, was used not only for music but also for narrating epics and transmitting oral history. Each sound had a deep meaning.</p>`, wo: `<p>Jumtukaay bii, xejj na ab xalam mbaa kora la, duñu ko doon jëfandikoo rekk ngir woy, waaye itam ngir nettali ay taariix ak wàcce cosaan. Baat bu nekk amoon na tekki bu xóot.</p>` },
+                7: {
+                    fr: `<p>Le masque Punu du Gabon est célèbre pour son visage blanc, symbolisant la beauté et l'esprit d'un ancêtre féminin. Il était utilisé dans des danses sur échasses, créant une vision spectrale et gracieuse.</p>`,
+                    en: `<p>The Punu mask from Gabon is famous for its white face, symbolizing the beauty and spirit of a female ancestor. It was used in stilt dances, creating a spectral and graceful vision.</p>`,
+                    wo: `<p>Masku Punu bu Gaboŋ, siiw na ci kanamam gu weex, di tekki rafet-gaay ak ruu gu jigéen gu maam. Dañu ko doon jëfandikoo ci ay fecc ci kaw ay tànk, di taxawal ab nataal bu yéeme te rafet.</p>`
+                },
+                8: {
+                    fr: `<p>Cette statuette en bronze du Royaume du Bénin est un exemple remarquable de la technique de la cire perdue. Elle représente probablement un Oba (roi) ou une reine mère, et servait à commémorer leur règne sur des autels ancestraux.</p>`,
+                    en: `<p>This bronze statuette from the Kingdom of Benin is a remarkable example of the lost-wax casting technique. It likely represents an Oba (king) or a queen mother, and was used to commemorate their reign on ancestral altars.</p>`,
+                    wo: `<p>Natt bii, ci bronse lañu ko defar, jóge ci Nguuru Benin, te di ab misaal bu rafet ci xarañteefu cire perdue. Xejj na ab Oba (buur) la mbaa yaayu buur, te dañu ko doon jëfandikoo ngir fàttaliku seeni nguur ci ay altari maam.</p>`
+                }
             }
         };
 
@@ -281,12 +305,6 @@
                 return;
             }
 
-            // Populate static content
-            document.getElementById('artwork-image').src = artwork.img;
-            document.getElementById('artwork-image').alt = artwork.title;
-            document.getElementById('artwork-origin').textContent = artwork.origin;
-            document.getElementById('artwork-title').textContent = artwork.title;
-
             const descriptionContainer = document.getElementById('artwork-description');
             const audioContainer = document.getElementById('audio-container');
             const videoContainer = document.getElementById('video-container');
@@ -297,10 +315,20 @@
             let ttsUtterance = null; // Pour la synthèse vocale
 
             function loadContent(lang) {
+                // Populate static content first
+                document.getElementById('artwork-image').src = artwork.img;
+
                 // Translate UI elements
                 document.querySelector('[data-translate-key="back_to_gallery"]').textContent = uiTranslations[lang].back_to_gallery;
                 document.querySelector('[data-translate-key="lang_label"]').textContent = uiTranslations[lang].lang_label;
                 document.querySelector('[data-translate-key="griot_welcome"]').textContent = uiTranslations[lang].griot_welcome;
+
+                // Translate artwork title and origin
+                const title = (artwork.title && artwork.title[lang]) || (artwork.title && artwork.title['fr']) || "Titre non disponible";
+                const origin = (artwork.origin && artwork.origin[lang]) || (artwork.origin && artwork.origin['fr']) || "Origine non disponible";
+                document.getElementById('artwork-title').textContent = title;
+                document.getElementById('artwork-origin').textContent = origin;
+                document.getElementById('artwork-image').alt = title;
 
                 // Load artwork content
                 const description = (db.descriptions[artworkId] && db.descriptions[artworkId][lang]) || (db.descriptions[artworkId] && db.descriptions[artworkId]['fr']) || '<p>Description non disponible.</p>';
