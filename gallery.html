@@ -8,11 +8,61 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        // Script de thème à placer dans le <head> pour éviter le flash
+        if (localStorage.getItem('theme') === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.add('light');
+        } else {
+            document.documentElement.classList.remove('light');
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #ffffff; }
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-dark: rgba(0, 0, 0, 0.4);
+            --bg-nav: rgba(10, 10, 10, 0.7);
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --text-muted: #6b7280;
+            --border-primary: rgba(255, 255, 255, 0.05);
+            --border-secondary: #374151;
+            --accent-gold: #d4af37;
+            --accent-gold-gradient: linear-gradient(135deg, #d4af37 0%, #f4e5a1 50%, #d4af37 100%);
+            --accent-gold-hover: #f4e5a1;
+            --btn-primary-text: #0a0a0a;
+        }
+        .light {
+            --bg-primary: #fdfaf5;
+            --bg-secondary: #f7f2ec;
+            --bg-card: #ffffff;
+            --bg-card-dark: rgba(255, 255, 255, 0.7);
+            --bg-nav: rgba(253, 250, 245, 0.8);
+            --text-primary: #3d3d3d;
+            --text-secondary: #5a5a5a;
+            --text-muted: #888888;
+            --border-primary: rgba(0, 0, 0, 0.08);
+            --border-secondary: #e5e7eb;
+            --accent-gold: #a17c38;
+            --accent-gold-gradient: linear-gradient(135deg, #a17c38 0%, #c5a36a 50%, #a17c38 100%);
+            --accent-gold-hover: #b18c48;
+            --btn-primary-text: #ffffff;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-primary); 
+            color: var(--text-primary); 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
         h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; font-weight: 300; letter-spacing: -0.02em; }
-        .gold-text { background: linear-gradient(135deg, #d4af37 0%, #f4e5a1 50%, #d4af37 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .nav-blur { background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .gold-text { 
+            background: var(--accent-gold-gradient); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text; 
+        }
+        .nav-blur { background: var(--bg-nav); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-primary); }
         .artwork-card { position: relative; overflow: hidden; cursor: pointer; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .artwork-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.9) 100%); opacity: 0.6; transition: opacity 0.5s ease; }
         .artwork-card:hover::before { opacity: 0.3; }
@@ -69,11 +119,8 @@
     <nav class="fixed w-full top-0 z-50 nav-blur">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
-                <a href="index.html" class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-600 to-yellow-800 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
-                    </div>
-                    <span class="text-xl font-light tracking-wide">MCN</span>
+            <a href="index.html" class="flex items-center space-x-3">
+                <span class="text-xl"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANUAAADtCAMAAAAft8BxAAABtlBMVEUAAAD/////WAD/VQBSUlL/WwD/TwD/UgD/RwD/SgD/4M3/TQD//fr/cST/RQD/zrD/fB//2sX/u5H/x6b/QAD/9/H/fyX/9e7/qnX/8Of/7OL/XwD/0Lz/5tn/18b/5Nf/vqP/r4v/xa3/x7D/0r//07n/mmX/kGP/zbj/qHv/tpj/oHD/NgD/zK//iVj/r5D/poP/wp//ekD/hFCwPQD/oXX/l23/dDb/sIH/gkylOQDxUwBNGwDGRAD/on7/r37/l1X/agCPMQDXSgA/FgDoUAArDwD/omL/mlf/k1z/ZhuCLQBeIAD/by3/hTVpJADk5OQyEQD/iUX/lUczAAD/qGy+QgAVBwD/hUPGxsY8PDwAAAgAGCAjOT5LWl5lcXNzcGl7alx9iImiloy/j3fYh2LgxLSMhn4ZMDRhVUmcd2DYkXOuqqTpYx+KVTU3KhpTKQdKOzXVbk/ihFlxGgC1KgC+fWvBaEPazL9oAABZEQBCAAC5Ui9VMCSUJwDTNADFeGJjQjmpJAChYE6HHwB8TkGPmpyZeG/CmYjej3rqdUnEqqNrfH9nFwCEPx2+Wh8iIiK5eVD9ZOeOAAAgAElFTkSuQmCC" alt="Logo MCN" class="h-20"></span>
                 </a>
                 <div class="hidden md:flex items-center space-x-12">
                     <a href="index.html" class="text-sm text-gray-300 hover:text-white transition" data-translate-key="nav_home">Accueil</a>
